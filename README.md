@@ -12,9 +12,9 @@ This is an unofficial client for interacting with Google Play APIs. It is not af
 ## Notes
 
 - I try to keep this reasonably up to date with relevant changes from Aurora and EFF.
-- This library will generally follow updates I make in the Rust version.
+- This library will generally follow updates I make in the [Rust version](https://github.com/Andell4301/playrs) I update in tandem.
 - This code is primarily for my own use, so I cannot guarantee that breaking changes will not happen.
-- I did not originally plan to open-source this, so the git history was wiped when publishing. This project has been around for a while, though.
+- I did not originally plan to open source this, so the git history was wiped when publishing. This project has been around for a while, though.
 - Not all code paths have been tested, especially areas I do not personally use.
 
 ## Usage
