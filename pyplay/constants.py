@@ -1,0 +1,170 @@
+# SPDX-FileCopyrightText: 2020-2025 Aurora OSS
+# SPDX-FileCopyrightText: 2023-2025 The Calyx Institute
+# SPDX-License-Identifier: GPL-3.0-or-later
+from __future__ import annotations
+
+from enum import IntEnum, StrEnum
+from pathlib import Path
+
+PYPLAY_DIR = Path(__file__).resolve().parent
+DEVICES_PATH = PYPLAY_DIR / "res" / "devices"
+
+IMAGE_TYPE_APP_SCREENSHOT = 1
+IMAGE_TYPE_PAGE_BACKGROUND = 2
+IMAGE_TYPE_YOUTUBE_VIDEO_LINK = 3
+IMAGE_TYPE_APP_ICON = 4
+IMAGE_TYPE_CATEGORY_ICON = 5
+IMAGE_TYPE_VIDEO_THUMBNAIL = 13
+IMAGE_TYPE_GOOGLE_PLUS_BACKGROUND = 15
+
+DEFAULT_CLIENT_SIG = "38918a453d07199354f8b19af05ec6562ced5788"
+DEFAULT_CALLER_SIG = "38918a453d07199354f8b19af05ec6562ced5788"
+DEFAULT_ANDROID_VENDING_PACKAGE = "com.google.android.gms"
+DEFAULT_ANDROID_VENDING_APP = "com.android.vending"
+DEFAULT_DFE_TARGETS = "CAESN/qigQYC2AMBFfUbyA7SM5Ij/CvfBoIDgxHqGP8R3xzIBvoQtBKFDZ4HAY4FrwSVMasHBO0O2Q8akgYRAQECAQO7AQEpKZ0CnwECAwRrAQYBr9PPAoK7sQMBAQMCBAkIDAgBAwEDBAICBAUZEgMEBAMLAQEBBQEBAcYBARYED+cBfS8CHQEKkAEMMxcBIQoUDwYHIjd3DQ4MFk0JWGYZEREYAQOLAYEBFDMIEYMBAgICAgICOxkCD18LGQKEAcgDBIQBAgGLARkYCy8oBTJlBCUocxQn0QUBDkkGxgNZQq0BZSbeAmIDgAEBOgGtAaMCDAOQAZ4BBIEBKUtQUYYBQscDDxPSARA1oAEHAWmnAsMB2wFyywGLAxol+wImlwOOA80CtwN26A0WjwJVbQEJPAH+BRDeAfkHK/ABASEBCSAaHQemAzkaRiu2Ad8BdXeiAwEBGBUBBN4LEIABK4gB2AFLfwECAdoENq0CkQGMBsIBiQEtiwGgA1zyAUQ4uwS8AwhsvgPyAcEDF27vApsBHaICGhl3GSKxAR8MC6cBAgItmQYG9QIeywLvAeYBDArLAh8HASI4ELICDVmVBgsY/gHWARtcAsMBpALiAdsBA7QBpAJmIArpByn0AyAKBwHTARIHAX8D+AMBcRIBBbEDmwUBMacCHAciNp0BAQF0OgQLJDuSAh54kwFSP0eeAQQ4M5EBQgMEmwFXywFo0gFyWwMcapQBBugBPUW2AVgBKmy3AR6PAbMBGQxrUJECvQR+8gFoWDsYgQNwRSczBRXQAgtRswEW0ALMAREYAUEBIG6yATYCRE8OxgER8gMBvQEDRkwLc8MBTwHZAUOnAXiiBakDIbYBNNcCIUmuArIBSakBrgFHKs0EgwV/G3AD0wE6LgECtQJ4xQFwFbUCjQPkBS6vAQqEAUZF3QIM9wEhCoYCQhXsBCyZArQDugIziALWAdIBlQHwBdUErQE6qQaSA4EEIvYBHir9AQVLmgMCApsCKAwHuwgrENsBAjNYswEVmgIt7QJnN4wDEnta+wGfAcUBxgEtEFXQAQWdAUAeBcwBAQM7rAEJATJ0LENrdh73A6UBhAE+qwEeASxLZUMhDREuH0CGARbd7K0GlQo"  # noqa: E501
+DEFAULT_DFE_PHENOTYPE = "H4sIAAAAAAAAAB3OO3KjMAAA0KRNuWXukBkBQkAJ2MhgAZb5u2GCwQZbCH_EJ77QHmgvtDtbv-Z9_H63zXXU0NVPB1odlyGy7751Q3CitlPDvFd8lxhz3tpNmz7P92CFw73zdHU2Ie0Ad2kmR8lxhiErTFLt3RPGfJQHSDy7Clw10bg8kqf2owLokN4SecJTLoSwBnzQSd652_MOf2d1vKBNVedzg4ciPoLz2mQ8efGAgYeLou-l-PXn_7Sna1MfhHuySxt-4esulEDp8Sbq54CPPKjpANW-lkU2IZ0F92LBI-ukCKSptqeq1eXU96LD9nZfhKHdtjSWwJqUm_2r6pMHOxk01saVanmNopjX3YxQafC4iC6T55aRbC8nTI98AF_kItIQAJb5EQxnKTO7TZDWnr01HVPxelb9A2OWX6poidMWl16K54kcu_jhXw-JSBQkVcD_fPsLSZu6joIBAAA"  # noqa: E501
+LEGACY_USER_AGENT = "Android-Finsky/29.2.15-21 [0] [PR] 426536134 (api=3,versionCode=82921510,sdk=25)"
+
+URL_BASE = "https://android.clients.google.com"
+URL_FDFE = f"{URL_BASE}/fdfe"
+URL_ACQUIRE = f"{URL_FDFE}/acquire"
+URL_CATEGORIES = f"{URL_FDFE}/categoriesList"
+URL_CATEGORIES_2 = f"{URL_FDFE}/allCategoriesList"
+URL_DELIVERY = f"{URL_FDFE}/delivery"
+URL_PURCHASE = f"{URL_FDFE}/purchase"
+URL_PURCHASE_HISTORY = f"{URL_FDFE}/purchaseHistory"
+URL_TOP_CHART = f"{URL_FDFE}/listTopChartItems"
+URL_AUTH = f"{URL_BASE}/auth"
+URL_BULK_DETAILS = f"{URL_FDFE}/bulkDetails"
+URL_BULK_PREFETCH = f"{URL_FDFE}/bulkPrefetch"
+URL_CHECK_IN = f"{URL_BASE}/checkin"
+URL_DETAILS = f"{URL_FDFE}/details"
+URL_DETAILS_DEVELOPER = f"{URL_FDFE}/browseDeveloperPage"
+URL_MY_APPS = f"{URL_FDFE}/myApps"
+URL_REVIEW_ADD_EDIT = f"{URL_FDFE}/addReview"
+URL_REVIEW_USER = f"{URL_FDFE}/userReview"
+URL_REVIEWS = f"{URL_FDFE}/rev"
+URL_SEARCH = f"{URL_FDFE}/search"
+URL_SEARCH_SUGGEST = f"{URL_FDFE}/searchSuggest"
+URL_TESTING_PROGRAM = f"{URL_FDFE}/apps/testingProgram"
+URL_TOC = f"{URL_FDFE}/toc"
+URL_TOS_ACCEPT = f"{URL_FDFE}/acceptTos"
+URL_UPLOAD_DEVICE_CONFIG = f"{URL_FDFE}/uploadDeviceConfig"
+URL_SYNC = f"{URL_FDFE}/apps/contentSync"
+URL_SELF_UPDATE = f"{URL_FDFE}/selfUpdate"
+URL_USER_PROFILE = f"{URL_FDFE}/api/userProfile"
+URL_LIBRARY = f"{URL_FDFE}/library"
+URL_MODIFY_LIBRARY = f"{URL_FDFE}/modifyLibrary"
+
+
+class TokenService(StrEnum):
+    AC2DM = "ac2dm"
+    ANDROID = "android"
+    ANDROID_CHECK_IN_SERVER = "AndroidCheckInServer"
+    EXPERIMENTAL_CONFIG = "experimentsandconfigs"
+    GCM = "gcm"
+    GOOGLEPLAY = "googleplay"
+    NUMBERER = "numberer"
+    OAUTHLOGIN = "OAuthLogin"
+
+
+class Abuse(IntEnum):
+    SEXUAL_CONTENT = 1
+    GRAPHIC_VIOLENCE = 3
+    HATEFUL_OR_ABUSIVE_CONTENT = 4
+    IMPROPER_CONTENT_RATING = 5
+    HARMFUL_TO_DEVICE_OR_DATA = 7
+    OTHER = 8
+    ILLEGAL_PRESCRIPTION = 11
+    IMPERSONATION = 12
+
+
+class PatchFormat(IntEnum):
+    GDIFF = 1
+    GZIPPED_GDIFF = 2
+    GZIPPED_BSDIFF = 3
+    UNKNOWN_4 = 4
+    UNKNOWN_5 = 5
+
+
+class Restriction(IntEnum):
+    GENERIC = -1
+    NOT_RESTRICTED = 1
+    GEO_RESTRICTED = 2
+    DEVICE_RESTRICTED = 7
+    NOT_IN_GROUP = 8
+    UNKNOWN = 9
+    CARRIER_RESTRICTED = 10
+    COUNTRY_OR_CARRIER_RESTRICTED = 11
+    PARENTAL_CONTROL_RESTRICTION = 12
+    ADMIN_RESTRICTED = 21
+    ADMIN_PERMISSION_NOT_ACCEPTED = 22
+    AGE_RESTRICTED = 30
+    APP_OUTDATED = 32
+
+    @classmethod
+    def _missing_(cls, value: object) -> Restriction:  # noqa: ARG003
+        return cls.GENERIC
+
+
+class CategoryType(StrEnum):
+    APPLICATION = "APPLICATION"
+    GAME = "GAME"
+    FAMILY = "FAMILY"
+
+
+class CategoryWebType(IntEnum):
+    APPLICATION = 0
+    GAME = 1
+    FAMILY = 2
+
+
+class MyAppsClusterType(StrEnum):
+    MY_APPS_INSTALLED = "INSTALLED"
+    MY_APPS_LIBRARY = "LIBRARY"
+    MY_APPS_UPDATES = "UPDATES"
+
+
+class ReviewFilter(StrEnum):
+    ALL = "ALL"
+    NEWEST = "0"
+    POSITIVE = "1"
+    CRITICAL = "2"
+    FIVE = "5"
+    FOUR = "4"
+    THREE = "3"
+    TWO = "2"
+    ONE = "1"
+
+
+class StreamCategory(StrEnum):
+    APPLICATION = "APPLICATION"
+    GAME = "GAME"
+    NONE = "NONE"
+
+
+class StreamType(StrEnum):
+    EARLY_ACCESS = "appsEarlyAccessStream"
+    EDITOR_CHOICE = "getAppsEditorsChoiceStream"
+    HOME = "getHomeStream"
+    MY_APPS_LIBRARY = "myAppsStream?tab=LIBRARY"
+    PREMIUM_GAMES = "getAppsPremiumGameStream"
+    SUB_NAV = "subnavHome"
+    TOP_CHART = "topChartsStream"
+
+
+class DeliveryResponseStatus(IntEnum):
+    SUCCESS = 1
+    NOT_SUPPORTED_FOR_PURCHASE = 2
+    NOT_PURCHASED = 3
+    REMOVED_FROM_STORE = 7
+    UNKNOWN_ERROR = 8
+    NOT_SUPPORTED_FOR_PURCHASE_2 = 9
+
+
+class PlayFileType(IntEnum):
+    BASE = 0
+    OBB = 1
+    PATCH = 2
+    SPLIT = 3
+    DEX = 4

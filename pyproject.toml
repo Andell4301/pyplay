@@ -1,0 +1,56 @@
+[project]
+name = "pyplay"
+description = "A Google Play API client for Python."
+version = "0.1.2"
+requires-python = ">=3.11"
+dependencies = [
+    "babel>=2.17.0",
+    "httpx>=0.28.1",
+    "protobuf==6.32.1",
+]
+
+[project.optional-dependencies]
+protoc = ["protobuf-protoc-bin==32.1"]
+oauth = ["selenium>=4.37.0"]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["pyplay*"]
+
+[tool.setuptools.package-data]
+pyplay = ["res/**/*"]
+
+[tool.ruff]
+fix = true
+line-length = 120
+extend-exclude = ["playprotos"]
+target-version = "py311"
+
+[tool.ruff.lint]
+future-annotations = true
+select = ["ALL"]
+ignore = [
+    "ANN401",
+    "ASYNC240",
+    "BLE001",
+    "COM812",
+    "D",
+    "FBT001",
+    "FBT002",
+    "INP001",
+    "PLR0913",
+    "S105",
+    "S603",
+]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+include = ["pyplay", "scripts"]
+ignore = ["pyplay/playprotos"]
