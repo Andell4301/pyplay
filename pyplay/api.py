@@ -38,6 +38,7 @@ from pyplay.constants import (
     URL_PURCHASE,
     URL_PURCHASE_HISTORY,
     URL_REVIEW_ADD_EDIT,
+    URL_REVIEW_DELETE,
     URL_REVIEW_USER,
     URL_REVIEWS,
     URL_SEARCH,
@@ -512,6 +513,18 @@ class GooglePlayAPI:
         }
         resp = await self._play_request("POST", URL_REVIEW_ADD_EDIT, headers=headers, params=params)
         return resp.payload.review_response.user_reviews_response.review[0]
+
+    async def delete_review(self, package_name: str, is_beta: bool = False) -> bool:
+        headers = self.get_default_headers()
+        params = {"doc": package_name, "itpr": str(is_beta)}
+        resp = await self._request("POST", URL_REVIEW_DELETE, headers=headers, params=params)
+        return resp.is_success
+
+    async def get_next_reviews(self, next_page_url: str) -> ReviewResponse:
+        headers = self.get_default_headers()
+        url = f"{URL_FDFE}/{next_page_url}"
+        resp = await self._play_request("GET", url, headers=headers)
+        return resp.payload.review_response
 
     async def search_suggestions(self, query: str) -> SearchSuggestResponse:
         headers = self.get_default_headers()
