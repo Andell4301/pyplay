@@ -783,7 +783,7 @@ class GooglePlayAPI:
         manifest: dict[str, Any] = {
             "xapk_version": "2",
             "package_name": details.package_name,
-            "name": details.title,
+            "name": app_details.item.title,
             "locales_name": {},
             "version_code": str(details.version_code),
             "version_name": details.version_string,
