@@ -135,7 +135,7 @@ class GooglePlayAPI:
         self.auth_data = auth_data
         self.client = httpx.AsyncClient(timeout=60.0, follow_redirects=True)
 
-        if not (self.has_gsf_auth or self.has_oauth_auth or self.has_aas_auth):
+        if not (self.has_gsf_auth or self.has_oauth_auth or self.has_aas_auth or self.has_token_auth):
             msg = (
                 "Insufficient authentication data provided to initialize API. "
                 "Provide at least GSF ID and Auth Token, or Email and OAuth Login Token."
@@ -169,6 +169,10 @@ class GooglePlayAPI:
     @property
     def has_aas_auth(self) -> bool:
         return bool(self.auth_data.email and self.auth_data.aas_token)
+
+    @property
+    def has_token_auth(self) -> bool:
+        return bool(self.auth_data.email and self.auth_data.auth_token)
 
     @staticmethod
     def parse_form_response(response: bytes) -> dict[str, str]:
@@ -268,7 +272,8 @@ class GooglePlayAPI:
         upload_device_response = await self.upload_device_config()
         self.auth_data.device_config_token = upload_device_response.upload_device_config_token
 
-        self.auth_data.auth_token = await self.generate_token(TokenService.GOOGLEPLAY)
+        if self.auth_data.aas_token:
+            self.auth_data.auth_token = await self.generate_token(TokenService.GOOGLEPLAY)
 
         # https://gitlab.com/AuroraOSS/gplayapi/-/commit/735ec0e00ce51b6934a673f17c906e07373a9a43
         # Skip accepting Google ToS because it adds device to Google account
