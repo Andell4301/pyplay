@@ -61,7 +61,7 @@ from pyplay.constants import (
     TokenService,
 )
 from pyplay.device import Device
-from pyplay.exceptions import AuthExceptionError, ProtobufResponseError, PurchaseError
+from pyplay.exceptions import AuthExceptionError, EmptyDownloadsError, ProtobufResponseError, PurchaseError
 from pyplay.playprotos.acquire_app import AcquireRequest, AcquireResponseWrapper
 from pyplay.playprotos.google_play import (
     AndroidCheckinResponse,
@@ -72,11 +72,13 @@ from pyplay.playprotos.google_play import (
     TestingProgramRequest,
     UploadDeviceConfigRequest,
 )
+from pyplay.playprotos.stream import StreamResponse
 
 T = TypeVar("T", bound=Message)
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
     from types import TracebackType
 
@@ -119,6 +121,15 @@ def _safe_route(url: str) -> str:
     return route.encode("unicode_escape").decode("ascii") or "/"
 
 
+def _fdfe_url(path: str) -> str:
+    base = httpx.URL(f"{URL_FDFE}/")
+    url = base.join(path)
+    if (url.scheme, url.host, url.port) != (base.scheme, base.host, base.port):
+        msg = "Stream URLs must use the Google Play API origin"
+        raise ValueError(msg)
+    return str(url)
+
+
 def _elapsed_ms(started: float) -> int:
     return int((perf_counter() - started) * 1000)
 
@@ -136,6 +147,17 @@ def _decode_response(message_type: type[T], response: httpx.Response, method: st
         return message_type.FromString(response.content)
     except DecodeError:
         raise ProtobufResponseError(method, route) from None
+
+
+def _stream_list_response(response: ResponseWrapper) -> ListResponse:
+    if (
+        response.HasField("pre_fetch")
+        and response.pre_fetch.HasField("response")
+        and response.pre_fetch.response.HasField("payload")
+        and response.pre_fetch.response.payload.HasField("list_response")
+    ):
+        return response.pre_fetch.response.payload.list_response
+    return response.payload.list_response
 
 
 @dataclass(repr=False)
@@ -257,7 +279,7 @@ class GooglePlayAPI:
         headers["X-DFE-Content-Filters"] = ""
         headers["X-Limit-Ad-Tracking-Enabled"] = "false"
         headers["X-Ad-Id"] = ""
-        headers["X-DFE-UserLanguages"] = str(self.locale)
+        headers["X-DFE-UserLanguages"] = self.device.user_languages
         headers["X-DFE-Request-Params"] = "timeoutMs=4000"
 
         if self.auth_data.device_check_in_consistency_token:
@@ -383,9 +405,9 @@ class GooglePlayAPI:
         headers = self.get_auth_headers()
         headers["app"] = DEFAULT_ANDROID_VENDING_APP
 
-        resp = await self._request("POST", URL_AUTH, headers=headers, data=params, raise_for_status=True)
+        resp = await self._request("POST", URL_AUTH, headers=headers, params=params, raise_for_status=True)
         parsed = self.parse_form_response(resp.content)
-        token = parsed.get("Token", "")
+        token = parsed.get("Token") or parsed.get("Auth", "")
 
         if not token:
             msg = "Failed to obtain AAS token"
@@ -425,13 +447,15 @@ class GooglePlayAPI:
                 params["callerPkg"] = "com.google.android.googlequicksearchbox"
             case TokenService.EXPERIMENTAL_CONFIG:
                 params["service"] = f"oauth2:https://www.googleapis.com/auth/{TokenService.EXPERIMENTAL_CONFIG}"
-            case TokenService.NUMBERER | TokenService.GCM | TokenService.GOOGLEPLAY:
+            case TokenService.NUMBERER | TokenService.GCM:
                 params["app"] = DEFAULT_ANDROID_VENDING_PACKAGE
+                params["service"] = f"oauth2:https://www.googleapis.com/auth/{service}"
+            case TokenService.GOOGLEPLAY:
                 params["service"] = f"oauth2:https://www.googleapis.com/auth/{service}"
             case TokenService.ANDROID:
                 params["service"] = TokenService.ANDROID
 
-        resp = await self._request("POST", URL_AUTH, headers=headers, data=params, raise_for_status=True)
+        resp = await self._request("POST", URL_AUTH, headers=headers, params=params, raise_for_status=True)
         parsed = self.parse_form_response(resp.content)
         auth = parsed.get("Auth", "")
         if not auth:
@@ -442,7 +466,7 @@ class GooglePlayAPI:
     async def check_in(self, request: bytes) -> AndroidCheckinResponse:
         logger.debug("Performing device check-in...")
         headers = self.get_auth_headers()
-        headers["Content-Type"] = "application/x-protobuf"
+        headers["Content-Type"] = "application/x-protobuffer"
         headers["Host"] = "android.clients.google.com"
         resp = await self._request("POST", URL_CHECK_IN, headers=headers, content=request)
         return _decode_response(AndroidCheckinResponse, resp, "POST", _safe_route(URL_CHECK_IN))
@@ -495,9 +519,16 @@ class GooglePlayAPI:
 
     async def get_dev_stream(self, dev_id: str) -> ListResponse:
         headers = self.get_default_headers()
-        url = f"{URL_FDFE}/getDeveloperPageStream?docid=developer-{dev_id}"
-        resp = await self._play_request("GET", url, headers=headers)
-        return resp.payload.list_response
+        url = f"{URL_FDFE}/getDeveloperPageStream"
+        resp = await self._play_request("GET", url, headers=headers, params={"docid": f"developer-{dev_id}"})
+        return _stream_list_response(resp)
+
+    async def get_stream_tree_response(self, stream_or_next_url: str) -> StreamResponse:
+        """Read items and their node tree from a stream or pagination URL."""
+        headers = self.get_default_headers()
+        url = _fdfe_url(stream_or_next_url)
+        response = await self._request("GET", url, headers=headers)
+        return _decode_response(StreamResponse, response, "GET", _safe_route(url))
 
     async def get_testing_program_details(
         self, package_name: str, *, subscribe: bool = False
@@ -516,28 +547,26 @@ class GooglePlayAPI:
 
     async def get_category_stream(self, stream_or_next_url: str) -> ListResponse:
         headers = self.get_default_headers()
-        url = f"{URL_FDFE}/{stream_or_next_url}"
+        url = _fdfe_url(stream_or_next_url)
         resp = await self._play_request("GET", url, headers=headers)
-        if pf := (resp.pre_fetch.response.payload.list_response):
-            return pf
-        return resp.payload.list_response
+        return _stream_list_response(resp)
 
     async def get_my_apps(self, cluster_type: MyAppsClusterType) -> ListResponse:
         headers = self.get_default_headers()
         params = {"n": "15", "tab": cluster_type}
         url = f"{URL_FDFE}/myAppsStream"
         resp = await self._play_request("GET", url, headers=headers, params=params)
-        return resp.payload.list_response
+        return _stream_list_response(resp)
 
     async def get_next_stream_response(self, next_url: str) -> ListResponse:
         headers = self.get_default_headers()
-        url = f"{URL_FDFE}/{next_url}"
+        url = _fdfe_url(next_url)
         resp = await self._play_request("GET", url, headers=headers)
-        return resp.payload.list_response
+        return _stream_list_response(resp)
 
     async def get_browse_response(self, browse_url: str) -> BrowseResponse:
         headers = self.get_default_headers()
-        url = f"{URL_FDFE}/{browse_url}"
+        url = _fdfe_url(browse_url)
         resp = await self._play_request("GET", url, headers=headers)
         return resp.payload.browse_response
 
@@ -583,7 +612,7 @@ class GooglePlayAPI:
 
     async def get_user_review(self, package_name: str, testing: bool = False) -> Review | None:
         headers = self.get_default_headers()
-        params = {"doc": package_name, "itpr": str(testing)}
+        params = {"doc": package_name, "itpr": str(testing).lower()}
         resp = await self._play_request("GET", URL_REVIEW_USER, headers=headers, params=params)
         if review := resp.payload.review_response.user_reviews_response.review:
             return review[0]
@@ -599,36 +628,42 @@ class GooglePlayAPI:
             "content": content,
             "rating": str(rating),
             "rst": "3",
-            "itpr": str(is_beta),
+            "itpr": str(is_beta).lower(),
         }
         resp = await self._play_request("POST", URL_REVIEW_ADD_EDIT, headers=headers, params=params)
-        return resp.payload.review_response.user_reviews_response.review[0]
+        review_response = resp.payload.review_response
+        if review_response.HasField("user_review"):
+            return review_response.user_review
+        msg = "No review returned by addReview"
+        raise ValueError(msg)
 
     async def delete_review(self, package_name: str, is_beta: bool = False) -> bool:
         headers = self.get_default_headers()
-        params = {"doc": package_name, "itpr": str(is_beta)}
+        params = {"doc": package_name, "itpr": str(is_beta).lower()}
         resp = await self._request("POST", URL_REVIEW_DELETE, headers=headers, params=params)
         return resp.is_success
 
     async def get_next_reviews(self, next_page_url: str) -> ReviewResponse:
         headers = self.get_default_headers()
-        url = f"{URL_FDFE}/{next_page_url}"
+        url = _fdfe_url(next_page_url)
         resp = await self._play_request("GET", url, headers=headers)
         return resp.payload.review_response
 
     async def search_suggestions(self, query: str) -> SearchSuggestResponse:
         headers = self.get_default_headers()
         headers["User-Agent"] = LEGACY_USER_AGENT
-        params = {"q": query, "sb": "5", "sst": "2", "sdt": "3"}
+        params = [("q", query), ("sb", "5"), ("sst", "2"), ("sst", "3")]
         resp = await self._play_request("GET", URL_SEARCH_SUGGEST, headers=headers, params=params)
         return resp.payload.search_suggest_response
 
     async def search_results(self, query: str, next_page_url: str = "") -> ListResponse:
         headers = self.get_default_headers()
-        params = {"q": query, "c": "3", "ksm": "1"}
-        url = f"{URL_FDFE}/{next_page_url}" if next_page_url else URL_SEARCH
-        resp = await self._play_request("GET", url, headers=headers, params=params)
-        return resp.pre_fetch.response.payload.list_response or resp.payload.list_response
+        if next_page_url:
+            resp = await self._play_request("GET", _fdfe_url(next_page_url), headers=headers)
+        else:
+            params = {"q": query, "c": "3", "ksm": "1"}
+            resp = await self._play_request("GET", URL_SEARCH, headers=headers, params=params)
+        return _stream_list_response(resp)
 
     async def get_list_response(self, stream_type: StreamType, category: StreamCategory | None = None) -> ListResponse:
         headers = self.get_default_headers()
@@ -639,16 +674,21 @@ class GooglePlayAPI:
         elif category and category != StreamCategory.NONE:
             params["cat"] = category
 
-        url = f"{URL_FDFE}/{stream_type}"
-        resp = await self._play_request("GET", url, headers=headers, params=params)
-        return resp.payload.list_response
+        url = str(httpx.URL(_fdfe_url(stream_type)).copy_merge_params(params))
+        resp = await self._play_request("GET", url, headers=headers)
+        return _stream_list_response(resp)
 
     async def get_cluster(self, category: str, chart: str) -> ListResponse | None:
         headers = self.get_default_headers()
         headers["User-Agent"] = LEGACY_USER_AGENT
         params = {"c": "3", "stcid": chart, "scat": category}
-        resp = await self._play_request("GET", URL_TOP_CHART, headers=headers, params=params)
-        return resp.payload.list_response
+        try:
+            resp = await self._play_request("GET", URL_TOP_CHART, headers=headers, params=params)
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code == httpx.codes.NOT_FOUND:
+                return None
+            raise
+        return _stream_list_response(resp)
 
     async def get_purchase_history(self, offset: int = 0) -> ListResponse:
         headers = self.get_default_headers()
@@ -663,7 +703,12 @@ class GooglePlayAPI:
         params = {"ot": str(offer_type), "doc": package_name, "vc": str(version_code)}
         if certificate_hash:
             params["ch"] = certificate_hash
-        resp = await self._play_request("POST", URL_PURCHASE, headers=headers, params=params)
+        try:
+            resp = await self._play_request("POST", URL_PURCHASE, headers=headers, params=params)
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code == httpx.codes.BAD_REQUEST:
+                return ""
+            raise
         return resp.payload.buy_response.encoded_delivery_token
 
     async def get_delivery_response(
@@ -676,13 +721,23 @@ class GooglePlayAPI:
         patch_format: PatchFormat = PatchFormat.GZIPPED_BSDIFF,
         delivery_token: str = "",
         certificate_hash: str | None = None,
+        *,
+        installed_derived_apk_id: int | None = None,
+        installed_frosting_id: int | None = None,
+        patch_formats: Sequence[PatchFormat] | None = None,
     ) -> DeliveryResponse:
         headers = self.get_default_headers()
         params = {"ot": str(offer_type), "doc": package_name, "vc": str(update_version_code)}
+        requested_formats: list[tuple[str, str]] = []
 
         if installed_version_code and installed_version_code > 0:
             params["bvc"] = str(installed_version_code)
-            params["pf"] = str(patch_format.value)
+            formats = [patch_format] if patch_formats is None else patch_formats
+            requested_formats = [("pf", str(format_.value)) for format_ in dict.fromkeys(formats)]
+            if installed_derived_apk_id:
+                params["bda"] = str(installed_derived_apk_id)
+            if installed_frosting_id:
+                params["bf"] = str(installed_frosting_id)
 
         if split_module:
             params["mn"] = split_module
@@ -691,7 +746,9 @@ class GooglePlayAPI:
         if delivery_token:
             params["dtok"] = delivery_token
 
-        resp = await self._play_request("GET", URL_DELIVERY, headers=headers, params=params)
+        resp = await self._play_request(
+            "GET", URL_DELIVERY, headers=headers, params=[*params.items(), *requested_formats]
+        )
         return resp.payload.delivery_response
 
     async def acquire(self, package_name: str, version_code: int, offer_type: int) -> AcquireResponseWrapper:
@@ -721,6 +778,10 @@ class GooglePlayAPI:
         split_module: str | None = None,
         installed_version_code: int | None = None,
         patch_format: PatchFormat = PatchFormat.GZIPPED_BSDIFF,
+        *,
+        installed_derived_apk_id: int | None = None,
+        installed_frosting_id: int | None = None,
+        patch_formats: Sequence[PatchFormat] | None = None,
     ) -> DeliveryResponse:
         # https://gitlab.com/AuroraOSS/gplayapi/-/commit/2180d4a50efac9b86f83e2bfb84db3366d41476d
         # It doesn't matter if this fails
@@ -743,9 +804,14 @@ class GooglePlayAPI:
             split_module=split_module,
             installed_version_code=installed_version_code,
             patch_format=patch_format,
+            installed_derived_apk_id=installed_derived_apk_id,
+            installed_frosting_id=installed_frosting_id,
+            patch_formats=patch_formats,
         )
 
         if delivery_response.status == DeliveryResponseStatus.SUCCESS:
+            if not self.parse_delivery_response(package_name, delivery_response, version_code=version_code):
+                raise EmptyDownloadsError
             logger.debug(
                 "purchase complete for %r",
                 package_name,
@@ -780,6 +846,10 @@ class GooglePlayAPI:
         use_xapk: bool = True,
         custom_apk_name: str | None = None,
         include_dex: bool = False,
+        *,
+        installed_derived_apk_id: int | None = None,
+        installed_frosting_id: int | None = None,
+        patch_formats: Sequence[PatchFormat] | None = None,
     ) -> None:
         started = perf_counter()
         logger.info("download started for %r", package_name)
@@ -800,9 +870,14 @@ class GooglePlayAPI:
             split_module=split_module,
             installed_version_code=installed_version_code,
             patch_format=patch_format,
+            installed_derived_apk_id=installed_derived_apk_id,
+            installed_frosting_id=installed_frosting_id,
+            patch_formats=patch_formats,
         )
 
-        files = self.parse_delivery_response(package_name, delivery_response)
+        files = self.parse_delivery_response(package_name, delivery_response, version_code=vc)
+        if not files:
+            raise EmptyDownloadsError
         downloaded_bytes = 0
         file_count = 0
         if len(files) == 1:
@@ -866,16 +941,20 @@ class GooglePlayAPI:
         manifest = self.make_xapk_manifest(details, files, include_dex=include_dex)
         manifest_path = output_dir / "manifest.json"
         manifest_path.write_text(json.dumps(manifest, indent=4, ensure_ascii=False))
+        base_file = next((file for file in files if file.type == PlayFileType.BASE), None)
 
         with ZipFile(output_dir / f"{custom_apk_name or package_name}.xapk", "w") as zipf:
             for file in files:
                 if file.type == PlayFileType.DEX and not include_dex:
                     continue
                 zipf.write(output_dir / file.name, arcname=file.name)
-            manifest_path = output_dir / "manifest.json"
-            zipf.write(manifest_path, arcname="manifest.json")
-            if icon_data := self.extract_icon_from_apk((output_dir / "base.apk").read_bytes()):
+            if base_file is not None and (
+                icon_data := self.extract_icon_from_apk((output_dir / base_file.name).read_bytes())
+            ):
+                manifest["icon"] = "icon.png"
+                manifest_path.write_text(json.dumps(manifest, indent=4, ensure_ascii=False))
                 zipf.writestr("icon.png", icon_data)
+            zipf.write(manifest_path, arcname="manifest.json")
 
         cleanup_failures = 0
         cleanup_paths = [output_dir / file.name for file in files if include_dex or file.type != PlayFileType.DEX]
@@ -924,13 +1003,13 @@ class GooglePlayAPI:
             "target_sdk_version": str(details.target_sdk_version),
             "permissions": list(details.permission),
             "total_size": 0,
-            "icon": "icon.png",
-            "split_apks": [{"file": f"{details.package_name}.apk", "id": "base"}],
+            "split_apks": [],
             "expansions": [],
         }
         for file in files:
             if file.type == PlayFileType.BASE:
                 manifest["total_size"] += file.size
+                manifest["split_apks"].append({"file": file.name, "id": "base"})
             elif file.type in [PlayFileType.OBB, PlayFileType.PATCH]:
                 manifest["total_size"] += file.size
                 manifest["expansions"].append(
@@ -949,11 +1028,13 @@ class GooglePlayAPI:
                 logger.warning("dex file omitted from xapk manifest")
         return manifest
 
-    def parse_delivery_response(self, package_name: str, response: DeliveryResponse) -> list[PlayFile]:
+    def parse_delivery_response(
+        self, package_name: str, response: DeliveryResponse, version_code: int = 0
+    ) -> list[PlayFile]:
         delivery_data = response.app_delivery_data
 
         files: list[PlayFile] = []
-        if delivery_data.download_url:
+        if delivery_data.download_url.strip():
             files.append(
                 PlayFile(
                     name="base.apk",
@@ -963,18 +1044,23 @@ class GooglePlayAPI:
                 )
             )
         for additional_file in delivery_data.additional_file:
-            is_obb = additional_file.file_type == 1
+            if not additional_file.download_url.strip():
+                continue
+            is_obb = additional_file.file_type == 0
             file_type = "main" if is_obb else "patch"
+            obb_version_code = additional_file.version_code or version_code
             files.append(
                 PlayFile(
-                    name=f"{file_type}.{additional_file.version_code}.{package_name}.obb",
+                    name=f"{file_type}.{obb_version_code}.{package_name}.obb",
                     url=additional_file.download_url,
                     size=additional_file.download_size,
                     type=PlayFileType.OBB if is_obb else PlayFileType.PATCH,
                 )
             )
         for split in delivery_data.split_delivery_data:
-            files.append(  # noqa: PERF401
+            if not split.download_url.strip():
+                continue
+            files.append(
                 PlayFile(
                     name=f"{split.name}.apk",
                     url=split.download_url,
@@ -982,8 +1068,17 @@ class GooglePlayAPI:
                     type=PlayFileType.SPLIT,
                 )
             )
+            if split.HasField("dex_metadata") and split.dex_metadata.download_url.strip():
+                files.append(
+                    PlayFile(
+                        name=f"{split.name}.dm",
+                        url=split.dex_metadata.download_url,
+                        size=split.dex_metadata.download_size,
+                        type=PlayFileType.DEX,
+                    )
+                )
 
-        if delivery_data.dex_metadata:
+        if delivery_data.HasField("dex_metadata") and delivery_data.dex_metadata.download_url.strip():
             files.append(
                 PlayFile(
                     name="base.dm",
@@ -993,4 +1088,4 @@ class GooglePlayAPI:
                 )
             )
 
-        return files
+        return files if any(file.type != PlayFileType.DEX for file in files) else []

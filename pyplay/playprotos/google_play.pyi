@@ -7,7 +7,7 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class AndroidAppDeliveryData(_message.Message):
-    __slots__ = ("download_size", "sha1", "download_url", "additional_file", "download_auth_cookie", "forward_locked", "refund_timeout", "server_initiated", "post_install_refund_window_millis", "immediate_start_needed", "patch_data", "encryption_params", "compressed_download_url", "compressed_size", "split_delivery_data", "install_location", "type", "compressed_app_data", "sha256", "dex_metadata")
+    __slots__ = ("download_size", "sha1", "download_url", "additional_file", "download_auth_cookie", "forward_locked", "refund_timeout", "server_initiated", "post_install_refund_window_millis", "immediate_start_needed", "patch_data", "encryption_params", "compressed_download_url", "compressed_size", "split_delivery_data", "install_location", "type", "compressed_app_data", "sha256", "dex_metadata", "incremental_signature", "read_log_logging_allowed", "nugget_data", "md5", "licensing_v2_enabled", "read_log_config", "served_version_code", "alternate_compressed_app_data")
     DOWNLOAD_SIZE_FIELD_NUMBER: _ClassVar[int]
     SHA1_FIELD_NUMBER: _ClassVar[int]
     DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
@@ -28,6 +28,14 @@ class AndroidAppDeliveryData(_message.Message):
     COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
     DEX_METADATA_FIELD_NUMBER: _ClassVar[int]
+    INCREMENTAL_SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    READ_LOG_LOGGING_ALLOWED_FIELD_NUMBER: _ClassVar[int]
+    NUGGET_DATA_FIELD_NUMBER: _ClassVar[int]
+    MD5_FIELD_NUMBER: _ClassVar[int]
+    LICENSING_V2_ENABLED_FIELD_NUMBER: _ClassVar[int]
+    READ_LOG_CONFIG_FIELD_NUMBER: _ClassVar[int]
+    SERVED_VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
+    ALTERNATE_COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
     download_size: int
     sha1: str
     download_url: str
@@ -48,20 +56,30 @@ class AndroidAppDeliveryData(_message.Message):
     compressed_app_data: CompressedAppData
     sha256: str
     dex_metadata: DexMetadata
-    def __init__(self, download_size: _Optional[int] = ..., sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., additional_file: _Optional[_Iterable[_Union[AppFileMetadata, _Mapping]]] = ..., download_auth_cookie: _Optional[_Iterable[_Union[HttpCookie, _Mapping]]] = ..., forward_locked: _Optional[bool] = ..., refund_timeout: _Optional[int] = ..., server_initiated: _Optional[bool] = ..., post_install_refund_window_millis: _Optional[int] = ..., immediate_start_needed: _Optional[bool] = ..., patch_data: _Optional[_Union[AndroidAppPatchData, _Mapping]] = ..., encryption_params: _Optional[_Union[EncryptionParams, _Mapping]] = ..., compressed_download_url: _Optional[str] = ..., compressed_size: _Optional[int] = ..., split_delivery_data: _Optional[_Iterable[_Union[SplitDeliveryData, _Mapping]]] = ..., install_location: _Optional[int] = ..., type: _Optional[int] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ..., sha256: _Optional[str] = ..., dex_metadata: _Optional[_Union[DexMetadata, _Mapping]] = ...) -> None: ...
+    incremental_signature: IncrementalSignatureData
+    read_log_logging_allowed: bool
+    nugget_data: NuggetData
+    md5: str
+    licensing_v2_enabled: bool
+    read_log_config: ReadLogConfig
+    served_version_code: int
+    alternate_compressed_app_data: CompressedAppData
+    def __init__(self, download_size: _Optional[int] = ..., sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., additional_file: _Optional[_Iterable[_Union[AppFileMetadata, _Mapping]]] = ..., download_auth_cookie: _Optional[_Iterable[_Union[HttpCookie, _Mapping]]] = ..., forward_locked: _Optional[bool] = ..., refund_timeout: _Optional[int] = ..., server_initiated: _Optional[bool] = ..., post_install_refund_window_millis: _Optional[int] = ..., immediate_start_needed: _Optional[bool] = ..., patch_data: _Optional[_Union[AndroidAppPatchData, _Mapping]] = ..., encryption_params: _Optional[_Union[EncryptionParams, _Mapping]] = ..., compressed_download_url: _Optional[str] = ..., compressed_size: _Optional[int] = ..., split_delivery_data: _Optional[_Iterable[_Union[SplitDeliveryData, _Mapping]]] = ..., install_location: _Optional[int] = ..., type: _Optional[int] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ..., sha256: _Optional[str] = ..., dex_metadata: _Optional[_Union[DexMetadata, _Mapping]] = ..., incremental_signature: _Optional[_Union[IncrementalSignatureData, _Mapping]] = ..., read_log_logging_allowed: _Optional[bool] = ..., nugget_data: _Optional[_Union[NuggetData, _Mapping]] = ..., md5: _Optional[str] = ..., licensing_v2_enabled: _Optional[bool] = ..., read_log_config: _Optional[_Union[ReadLogConfig, _Mapping]] = ..., served_version_code: _Optional[int] = ..., alternate_compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ...) -> None: ...
 
 class DexMetadata(_message.Message):
-    __slots__ = ("download_size", "sha256", "download_url")
+    __slots__ = ("download_size", "sha256", "download_url", "compressed_app_data")
     DOWNLOAD_SIZE_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
     DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
     download_size: int
     sha256: str
     download_url: str
-    def __init__(self, download_size: _Optional[int] = ..., sha256: _Optional[str] = ..., download_url: _Optional[str] = ...) -> None: ...
+    compressed_app_data: CompressedAppData
+    def __init__(self, download_size: _Optional[int] = ..., sha256: _Optional[str] = ..., download_url: _Optional[str] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ...) -> None: ...
 
 class SplitDeliveryData(_message.Message):
-    __slots__ = ("name", "download_size", "compressed_size", "sha1", "download_url", "compressed_download_url", "patch_data", "compressed_app_data", "sha256")
+    __slots__ = ("name", "download_size", "compressed_size", "sha1", "download_url", "compressed_download_url", "patch_data", "compressed_app_data", "sha256", "dex_metadata", "incremental_signature", "md5", "alternate_compressed_app_data")
     NAME_FIELD_NUMBER: _ClassVar[int]
     DOWNLOAD_SIZE_FIELD_NUMBER: _ClassVar[int]
     COMPRESSED_SIZE_FIELD_NUMBER: _ClassVar[int]
@@ -71,6 +89,10 @@ class SplitDeliveryData(_message.Message):
     PATCH_DATA_FIELD_NUMBER: _ClassVar[int]
     COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
+    DEX_METADATA_FIELD_NUMBER: _ClassVar[int]
+    INCREMENTAL_SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    MD5_FIELD_NUMBER: _ClassVar[int]
+    ALTERNATE_COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
     name: str
     download_size: int
     compressed_size: int
@@ -80,31 +102,41 @@ class SplitDeliveryData(_message.Message):
     patch_data: AndroidAppPatchData
     compressed_app_data: CompressedAppData
     sha256: str
-    def __init__(self, name: _Optional[str] = ..., download_size: _Optional[int] = ..., compressed_size: _Optional[int] = ..., sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., compressed_download_url: _Optional[str] = ..., patch_data: _Optional[_Union[AndroidAppPatchData, _Mapping]] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ..., sha256: _Optional[str] = ...) -> None: ...
+    dex_metadata: DexMetadata
+    incremental_signature: IncrementalSignatureData
+    md5: str
+    alternate_compressed_app_data: CompressedAppData
+    def __init__(self, name: _Optional[str] = ..., download_size: _Optional[int] = ..., compressed_size: _Optional[int] = ..., sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., compressed_download_url: _Optional[str] = ..., patch_data: _Optional[_Union[AndroidAppPatchData, _Mapping]] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ..., sha256: _Optional[str] = ..., dex_metadata: _Optional[_Union[DexMetadata, _Mapping]] = ..., incremental_signature: _Optional[_Union[IncrementalSignatureData, _Mapping]] = ..., md5: _Optional[str] = ..., alternate_compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ...) -> None: ...
 
 class AndroidAppPatchData(_message.Message):
-    __slots__ = ("base_version_code", "base_sha1", "download_url", "patch_format", "max_patch_size")
+    __slots__ = ("base_version_code", "base_sha1", "download_url", "patch_format", "max_patch_size", "base_version", "base_sha256")
     BASE_VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
     BASE_SHA1_FIELD_NUMBER: _ClassVar[int]
     DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
     PATCH_FORMAT_FIELD_NUMBER: _ClassVar[int]
     MAX_PATCH_SIZE_FIELD_NUMBER: _ClassVar[int]
+    BASE_VERSION_FIELD_NUMBER: _ClassVar[int]
+    BASE_SHA256_FIELD_NUMBER: _ClassVar[int]
     base_version_code: int
     base_sha1: str
     download_url: str
     patch_format: int
     max_patch_size: int
-    def __init__(self, base_version_code: _Optional[int] = ..., base_sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., patch_format: _Optional[int] = ..., max_patch_size: _Optional[int] = ...) -> None: ...
+    base_version: str
+    base_sha256: str
+    def __init__(self, base_version_code: _Optional[int] = ..., base_sha1: _Optional[str] = ..., download_url: _Optional[str] = ..., patch_format: _Optional[int] = ..., max_patch_size: _Optional[int] = ..., base_version: _Optional[str] = ..., base_sha256: _Optional[str] = ...) -> None: ...
 
 class CompressedAppData(_message.Message):
-    __slots__ = ("type", "size", "download_url")
+    __slots__ = ("type", "size", "download_url", "chunk")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     SIZE_FIELD_NUMBER: _ClassVar[int]
     DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    CHUNK_FIELD_NUMBER: _ClassVar[int]
     type: int
     size: int
     download_url: str
-    def __init__(self, type: _Optional[int] = ..., size: _Optional[int] = ..., download_url: _Optional[str] = ...) -> None: ...
+    chunk: _containers.RepeatedCompositeFieldContainer[CompressedAppChunk]
+    def __init__(self, type: _Optional[int] = ..., size: _Optional[int] = ..., download_url: _Optional[str] = ..., chunk: _Optional[_Iterable[_Union[CompressedAppChunk, _Mapping]]] = ...) -> None: ...
 
 class AppFileMetadata(_message.Message):
     __slots__ = ("file_type", "version_code", "download_size", "download_url", "patch_data", "compressed_size", "compressed_download_url", "sha1")
@@ -1745,7 +1777,7 @@ class PlusPerson(_message.Message):
     def __init__(self, display_name: _Optional[str] = ..., profile_image_url: _Optional[str] = ...) -> None: ...
 
 class AppDetails(_message.Message):
-    __slots__ = ("developer_name", "major_version_number", "version_code", "version_string", "title", "app_category", "content_rating", "info_download_size", "permission", "developer_email", "developer_website", "info_download", "package_name", "recent_changes_html", "info_updated_on", "file", "app_type", "certificate_hash", "varies_with_device", "certificate_set", "auto_acquire_free_app_if_higher_version_available_tag", "has_instant_link", "split_id", "gamepad_required", "externally_hosted", "ever_externally_hosted", "install_notes", "install_location", "target_sdk_version", "has_preregistration_promo_code", "dependencies", "testing_program_info", "early_access_info", "editor_choice", "instant_link", "developer_address", "publisher", "category_name", "download_count", "download_label_display", "app_launch", "tag_group", "in_app_product", "download_label_abbreviated", "download_label", "compatibility", "support")
+    __slots__ = ("developer_name", "major_version_number", "version_code", "version_string", "title", "app_category", "content_rating", "info_download_size", "permission", "developer_email", "developer_website", "info_download", "package_name", "recent_changes_html", "info_updated_on", "file", "app_type", "certificate_hash", "varies_with_device", "certificate_set", "auto_acquire_free_app_if_higher_version_available_tag", "has_instant_link", "split_id", "gamepad_required", "externally_hosted", "ever_externally_hosted", "install_notes", "install_location", "target_sdk_version", "has_preregistration_promo_code", "dependencies", "testing_program_info", "early_access_info", "editor_choice", "instant_link", "developer_address", "publisher", "category_name", "download_count", "download_label_display", "app_launch", "tag_group", "in_app_product", "download_label_abbreviated", "download_label", "compatibility", "support", "download_count_exact", "teacher_approval", "badge_logs")
     DEVELOPER_NAME_FIELD_NUMBER: _ClassVar[int]
     MAJOR_VERSION_NUMBER_FIELD_NUMBER: _ClassVar[int]
     VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
@@ -1793,6 +1825,9 @@ class AppDetails(_message.Message):
     DOWNLOAD_LABEL_FIELD_NUMBER: _ClassVar[int]
     COMPATIBILITY_FIELD_NUMBER: _ClassVar[int]
     SUPPORT_FIELD_NUMBER: _ClassVar[int]
+    DOWNLOAD_COUNT_EXACT_FIELD_NUMBER: _ClassVar[int]
+    TEACHER_APPROVAL_FIELD_NUMBER: _ClassVar[int]
+    BADGE_LOGS_FIELD_NUMBER: _ClassVar[int]
     developer_name: str
     major_version_number: int
     version_code: int
@@ -1840,7 +1875,10 @@ class AppDetails(_message.Message):
     download_label: str
     compatibility: Compatibility
     support: Support
-    def __init__(self, developer_name: _Optional[str] = ..., major_version_number: _Optional[int] = ..., version_code: _Optional[int] = ..., version_string: _Optional[str] = ..., title: _Optional[str] = ..., app_category: _Optional[_Iterable[str]] = ..., content_rating: _Optional[int] = ..., info_download_size: _Optional[int] = ..., permission: _Optional[_Iterable[str]] = ..., developer_email: _Optional[str] = ..., developer_website: _Optional[str] = ..., info_download: _Optional[str] = ..., package_name: _Optional[str] = ..., recent_changes_html: _Optional[str] = ..., info_updated_on: _Optional[str] = ..., file: _Optional[_Iterable[_Union[FileMetadata, _Mapping]]] = ..., app_type: _Optional[str] = ..., certificate_hash: _Optional[_Iterable[str]] = ..., varies_with_device: _Optional[bool] = ..., certificate_set: _Optional[_Iterable[_Union[CertificateSet, _Mapping]]] = ..., auto_acquire_free_app_if_higher_version_available_tag: _Optional[_Iterable[str]] = ..., has_instant_link: _Optional[bool] = ..., split_id: _Optional[_Iterable[str]] = ..., gamepad_required: _Optional[bool] = ..., externally_hosted: _Optional[bool] = ..., ever_externally_hosted: _Optional[bool] = ..., install_notes: _Optional[str] = ..., install_location: _Optional[int] = ..., target_sdk_version: _Optional[int] = ..., has_preregistration_promo_code: _Optional[str] = ..., dependencies: _Optional[_Union[Dependencies, _Mapping]] = ..., testing_program_info: _Optional[_Union[TestingProgramInfo, _Mapping]] = ..., early_access_info: _Optional[_Union[EarlyAccessInfo, _Mapping]] = ..., editor_choice: _Optional[_Union[EditorChoice, _Mapping]] = ..., instant_link: _Optional[str] = ..., developer_address: _Optional[str] = ..., publisher: _Optional[_Union[Publisher, _Mapping]] = ..., category_name: _Optional[str] = ..., download_count: _Optional[int] = ..., download_label_display: _Optional[str] = ..., app_launch: _Optional[_Union[AppLaunch, _Mapping]] = ..., tag_group: _Optional[_Union[TagGroup, _Mapping]] = ..., in_app_product: _Optional[str] = ..., download_label_abbreviated: _Optional[str] = ..., download_label: _Optional[str] = ..., compatibility: _Optional[_Union[Compatibility, _Mapping]] = ..., support: _Optional[_Union[Support, _Mapping]] = ...) -> None: ...
+    download_count_exact: int
+    teacher_approval: TeacherApprovalInfo
+    badge_logs: BadgeLogs
+    def __init__(self, developer_name: _Optional[str] = ..., major_version_number: _Optional[int] = ..., version_code: _Optional[int] = ..., version_string: _Optional[str] = ..., title: _Optional[str] = ..., app_category: _Optional[_Iterable[str]] = ..., content_rating: _Optional[int] = ..., info_download_size: _Optional[int] = ..., permission: _Optional[_Iterable[str]] = ..., developer_email: _Optional[str] = ..., developer_website: _Optional[str] = ..., info_download: _Optional[str] = ..., package_name: _Optional[str] = ..., recent_changes_html: _Optional[str] = ..., info_updated_on: _Optional[str] = ..., file: _Optional[_Iterable[_Union[FileMetadata, _Mapping]]] = ..., app_type: _Optional[str] = ..., certificate_hash: _Optional[_Iterable[str]] = ..., varies_with_device: _Optional[bool] = ..., certificate_set: _Optional[_Iterable[_Union[CertificateSet, _Mapping]]] = ..., auto_acquire_free_app_if_higher_version_available_tag: _Optional[_Iterable[str]] = ..., has_instant_link: _Optional[bool] = ..., split_id: _Optional[_Iterable[str]] = ..., gamepad_required: _Optional[bool] = ..., externally_hosted: _Optional[bool] = ..., ever_externally_hosted: _Optional[bool] = ..., install_notes: _Optional[str] = ..., install_location: _Optional[int] = ..., target_sdk_version: _Optional[int] = ..., has_preregistration_promo_code: _Optional[str] = ..., dependencies: _Optional[_Union[Dependencies, _Mapping]] = ..., testing_program_info: _Optional[_Union[TestingProgramInfo, _Mapping]] = ..., early_access_info: _Optional[_Union[EarlyAccessInfo, _Mapping]] = ..., editor_choice: _Optional[_Union[EditorChoice, _Mapping]] = ..., instant_link: _Optional[str] = ..., developer_address: _Optional[str] = ..., publisher: _Optional[_Union[Publisher, _Mapping]] = ..., category_name: _Optional[str] = ..., download_count: _Optional[int] = ..., download_label_display: _Optional[str] = ..., app_launch: _Optional[_Union[AppLaunch, _Mapping]] = ..., tag_group: _Optional[_Union[TagGroup, _Mapping]] = ..., in_app_product: _Optional[str] = ..., download_label_abbreviated: _Optional[str] = ..., download_label: _Optional[str] = ..., compatibility: _Optional[_Union[Compatibility, _Mapping]] = ..., support: _Optional[_Union[Support, _Mapping]] = ..., download_count_exact: _Optional[int] = ..., teacher_approval: _Optional[_Union[TeacherApprovalInfo, _Mapping]] = ..., badge_logs: _Optional[_Union[BadgeLogs, _Mapping]] = ...) -> None: ...
 
 class AppLaunch(_message.Message):
     __slots__ = ("date", "time")
@@ -1858,20 +1896,24 @@ class AppLaunch(_message.Message):
     def __init__(self, date: _Optional[str] = ..., time: _Optional[_Union[AppLaunch.Time, _Mapping]] = ...) -> None: ...
 
 class TagGroup(_message.Message):
-    __slots__ = ("type1", "type2", "type3", "type4", "type5", "type6")
+    __slots__ = ("type1", "type2", "type3", "type4", "type5", "type6", "type7", "type9")
     TYPE1_FIELD_NUMBER: _ClassVar[int]
     TYPE2_FIELD_NUMBER: _ClassVar[int]
     TYPE3_FIELD_NUMBER: _ClassVar[int]
     TYPE4_FIELD_NUMBER: _ClassVar[int]
     TYPE5_FIELD_NUMBER: _ClassVar[int]
     TYPE6_FIELD_NUMBER: _ClassVar[int]
+    TYPE7_FIELD_NUMBER: _ClassVar[int]
+    TYPE9_FIELD_NUMBER: _ClassVar[int]
     type1: TagType
     type2: TagType
     type3: TagType
     type4: TagType
     type5: TagType
     type6: TagType
-    def __init__(self, type1: _Optional[_Union[TagType, _Mapping]] = ..., type2: _Optional[_Union[TagType, _Mapping]] = ..., type3: _Optional[_Union[TagType, _Mapping]] = ..., type4: _Optional[_Union[TagType, _Mapping]] = ..., type5: _Optional[_Union[TagType, _Mapping]] = ..., type6: _Optional[_Union[TagType, _Mapping]] = ...) -> None: ...
+    type7: TagType
+    type9: TagType
+    def __init__(self, type1: _Optional[_Union[TagType, _Mapping]] = ..., type2: _Optional[_Union[TagType, _Mapping]] = ..., type3: _Optional[_Union[TagType, _Mapping]] = ..., type4: _Optional[_Union[TagType, _Mapping]] = ..., type5: _Optional[_Union[TagType, _Mapping]] = ..., type6: _Optional[_Union[TagType, _Mapping]] = ..., type7: _Optional[_Union[TagType, _Mapping]] = ..., type9: _Optional[_Union[TagType, _Mapping]] = ...) -> None: ...
 
 class TagType(_message.Message):
     __slots__ = ("entries",)
@@ -1980,7 +2022,7 @@ class CertificateSet(_message.Message):
     def __init__(self, certificate_hash: _Optional[str] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class Dependencies(_message.Message):
-    __slots__ = ("unknown", "size", "dependency", "target_sdk", "unknown2", "split_apks", "library_dependency")
+    __slots__ = ("unknown", "size", "dependency", "target_sdk", "unknown2", "split_apks", "library_dependency", "installer_permissions", "android_category", "target_sandbox_version", "install_reason", "frosting_id", "internal_sharing_id", "module_install", "asset_module_names", "unconfirmed16", "delivery_token", "archive", "reinstall", "split", "licensing_flag", "anti_tamper")
     UNKNOWN_FIELD_NUMBER: _ClassVar[int]
     SIZE_FIELD_NUMBER: _ClassVar[int]
     DEPENDENCY_FIELD_NUMBER: _ClassVar[int]
@@ -1988,6 +2030,21 @@ class Dependencies(_message.Message):
     UNKNOWN2_FIELD_NUMBER: _ClassVar[int]
     SPLIT_APKS_FIELD_NUMBER: _ClassVar[int]
     LIBRARY_DEPENDENCY_FIELD_NUMBER: _ClassVar[int]
+    INSTALLER_PERMISSIONS_FIELD_NUMBER: _ClassVar[int]
+    ANDROID_CATEGORY_FIELD_NUMBER: _ClassVar[int]
+    TARGET_SANDBOX_VERSION_FIELD_NUMBER: _ClassVar[int]
+    INSTALL_REASON_FIELD_NUMBER: _ClassVar[int]
+    FROSTING_ID_FIELD_NUMBER: _ClassVar[int]
+    INTERNAL_SHARING_ID_FIELD_NUMBER: _ClassVar[int]
+    MODULE_INSTALL_FIELD_NUMBER: _ClassVar[int]
+    ASSET_MODULE_NAMES_FIELD_NUMBER: _ClassVar[int]
+    UNCONFIRMED16_FIELD_NUMBER: _ClassVar[int]
+    DELIVERY_TOKEN_FIELD_NUMBER: _ClassVar[int]
+    ARCHIVE_FIELD_NUMBER: _ClassVar[int]
+    REINSTALL_FIELD_NUMBER: _ClassVar[int]
+    SPLIT_FIELD_NUMBER: _ClassVar[int]
+    LICENSING_FLAG_FIELD_NUMBER: _ClassVar[int]
+    ANTI_TAMPER_FIELD_NUMBER: _ClassVar[int]
     unknown: int
     size: int
     dependency: _containers.RepeatedCompositeFieldContainer[Dependency]
@@ -1995,25 +2052,52 @@ class Dependencies(_message.Message):
     unknown2: int
     split_apks: _containers.RepeatedScalarFieldContainer[str]
     library_dependency: _containers.RepeatedCompositeFieldContainer[LibraryDependency]
-    def __init__(self, unknown: _Optional[int] = ..., size: _Optional[int] = ..., dependency: _Optional[_Iterable[_Union[Dependency, _Mapping]]] = ..., target_sdk: _Optional[int] = ..., unknown2: _Optional[int] = ..., split_apks: _Optional[_Iterable[str]] = ..., library_dependency: _Optional[_Iterable[_Union[LibraryDependency, _Mapping]]] = ...) -> None: ...
+    installer_permissions: _containers.RepeatedScalarFieldContainer[str]
+    android_category: int
+    target_sandbox_version: int
+    install_reason: int
+    frosting_id: int
+    internal_sharing_id: str
+    module_install: ModuleInstall
+    asset_module_names: _containers.RepeatedScalarFieldContainer[str]
+    unconfirmed16: Unconfirmed16
+    delivery_token: DeliveryToken
+    archive: Archive
+    reinstall: Reinstall
+    split: _containers.RepeatedCompositeFieldContainer[DependencySplit]
+    licensing_flag: bool
+    anti_tamper: AntiTamper
+    def __init__(self, unknown: _Optional[int] = ..., size: _Optional[int] = ..., dependency: _Optional[_Iterable[_Union[Dependency, _Mapping]]] = ..., target_sdk: _Optional[int] = ..., unknown2: _Optional[int] = ..., split_apks: _Optional[_Iterable[str]] = ..., library_dependency: _Optional[_Iterable[_Union[LibraryDependency, _Mapping]]] = ..., installer_permissions: _Optional[_Iterable[str]] = ..., android_category: _Optional[int] = ..., target_sandbox_version: _Optional[int] = ..., install_reason: _Optional[int] = ..., frosting_id: _Optional[int] = ..., internal_sharing_id: _Optional[str] = ..., module_install: _Optional[_Union[ModuleInstall, _Mapping]] = ..., asset_module_names: _Optional[_Iterable[str]] = ..., unconfirmed16: _Optional[_Union[Unconfirmed16, _Mapping]] = ..., delivery_token: _Optional[_Union[DeliveryToken, _Mapping]] = ..., archive: _Optional[_Union[Archive, _Mapping]] = ..., reinstall: _Optional[_Union[Reinstall, _Mapping]] = ..., split: _Optional[_Iterable[_Union[DependencySplit, _Mapping]]] = ..., licensing_flag: _Optional[bool] = ..., anti_tamper: _Optional[_Union[AntiTamper, _Mapping]] = ...) -> None: ...
 
 class Dependency(_message.Message):
-    __slots__ = ("package_name", "version", "unknown4")
+    __slots__ = ("package_name", "version", "unknown4", "is_optional", "type", "module")
     PACKAGE_NAME_FIELD_NUMBER: _ClassVar[int]
     VERSION_FIELD_NUMBER: _ClassVar[int]
     UNKNOWN4_FIELD_NUMBER: _ClassVar[int]
+    IS_OPTIONAL_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    MODULE_FIELD_NUMBER: _ClassVar[int]
     package_name: str
     version: int
     unknown4: int
-    def __init__(self, package_name: _Optional[str] = ..., version: _Optional[int] = ..., unknown4: _Optional[int] = ...) -> None: ...
+    is_optional: bool
+    type: int
+    module: _containers.RepeatedCompositeFieldContainer[DependencyModule]
+    def __init__(self, package_name: _Optional[str] = ..., version: _Optional[int] = ..., unknown4: _Optional[int] = ..., is_optional: _Optional[bool] = ..., type: _Optional[int] = ..., module: _Optional[_Iterable[_Union[DependencyModule, _Mapping]]] = ...) -> None: ...
 
 class LibraryDependency(_message.Message):
-    __slots__ = ("package_name", "version_code")
+    __slots__ = ("package_name", "version_code", "type", "size", "details")
     PACKAGE_NAME_FIELD_NUMBER: _ClassVar[int]
     VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    DETAILS_FIELD_NUMBER: _ClassVar[int]
     package_name: str
     version_code: int
-    def __init__(self, package_name: _Optional[str] = ..., version_code: _Optional[int] = ...) -> None: ...
+    type: int
+    size: int
+    details: LibraryDetails
+    def __init__(self, package_name: _Optional[str] = ..., version_code: _Optional[int] = ..., type: _Optional[int] = ..., size: _Optional[int] = ..., details: _Optional[_Union[LibraryDetails, _Mapping]] = ...) -> None: ...
 
 class TestingProgramInfo(_message.Message):
     __slots__ = ("subscribed", "subscribed_and_installed", "email", "display_name", "image")
@@ -2052,20 +2136,26 @@ class PatchDetails(_message.Message):
     def __init__(self, base_version_code: _Optional[int] = ..., size: _Optional[int] = ...) -> None: ...
 
 class FileMetadata(_message.Message):
-    __slots__ = ("file_type", "version_code", "size", "split_id", "compressed_size", "patch_details")
+    __slots__ = ("file_type", "version_code", "size", "split_id", "compressed_size", "patch_details", "asset_module_name", "asset_module_version", "split_hotfix")
     FILE_TYPE_FIELD_NUMBER: _ClassVar[int]
     VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
     SIZE_FIELD_NUMBER: _ClassVar[int]
     SPLIT_ID_FIELD_NUMBER: _ClassVar[int]
     COMPRESSED_SIZE_FIELD_NUMBER: _ClassVar[int]
     PATCH_DETAILS_FIELD_NUMBER: _ClassVar[int]
+    ASSET_MODULE_NAME_FIELD_NUMBER: _ClassVar[int]
+    ASSET_MODULE_VERSION_FIELD_NUMBER: _ClassVar[int]
+    SPLIT_HOTFIX_FIELD_NUMBER: _ClassVar[int]
     file_type: int
     version_code: int
     size: int
     split_id: str
     compressed_size: int
     patch_details: _containers.RepeatedCompositeFieldContainer[PatchDetails]
-    def __init__(self, file_type: _Optional[int] = ..., version_code: _Optional[int] = ..., size: _Optional[int] = ..., split_id: _Optional[str] = ..., compressed_size: _Optional[int] = ..., patch_details: _Optional[_Iterable[_Union[PatchDetails, _Mapping]]] = ...) -> None: ...
+    asset_module_name: str
+    asset_module_version: AssetModuleVersion
+    split_hotfix: SplitHotfix
+    def __init__(self, file_type: _Optional[int] = ..., version_code: _Optional[int] = ..., size: _Optional[int] = ..., split_id: _Optional[str] = ..., compressed_size: _Optional[int] = ..., patch_details: _Optional[_Iterable[_Union[PatchDetails, _Mapping]]] = ..., asset_module_name: _Optional[str] = ..., asset_module_version: _Optional[_Union[AssetModuleVersion, _Mapping]] = ..., split_hotfix: _Optional[_Union[SplitHotfix, _Mapping]] = ...) -> None: ...
 
 class SubscriptionDetails(_message.Message):
     __slots__ = ("subscription_period",)
@@ -2106,7 +2196,7 @@ class ListResponse(_message.Message):
     def __init__(self, bucket: _Optional[_Iterable[_Union[Bucket, _Mapping]]] = ..., item: _Optional[_Union[Item, _Mapping]] = ...) -> None: ...
 
 class Item(_message.Message):
-    __slots__ = ("id", "sub_id", "type", "category_id", "title", "creator", "description_html", "offer", "availability", "image", "sub_item", "container_metadata", "details", "aggregate_rating", "annotations", "details_url", "share_url", "reviews_url", "backend_url", "purchase_details_url", "details_reusable", "subtitle", "translated_description_html", "server_logs_cookie", "app_info", "mature", "promotional_description", "available_for_preregistration", "tip", "review_snippets_url", "force_shareability", "use_wishlist_as_primary_action", "review_questions_url", "review_summary_url", "content_rating")
+    __slots__ = ("id", "sub_id", "type", "category_id", "title", "creator", "description_html", "offer", "availability", "image", "sub_item", "container_metadata", "details", "aggregate_rating", "annotations", "details_url", "share_url", "reviews_url", "backend_url", "purchase_details_url", "details_reusable", "subtitle", "translated_description_html", "server_logs_cookie", "app_info", "mature", "promotional_description", "available_for_preregistration", "tip", "review_snippets_url", "force_shareability", "use_wishlist_as_primary_action", "review_questions_url", "review_summary_url", "content_rating", "family_badge", "family_library")
     ID_FIELD_NUMBER: _ClassVar[int]
     SUB_ID_FIELD_NUMBER: _ClassVar[int]
     TYPE_FIELD_NUMBER: _ClassVar[int]
@@ -2142,6 +2232,8 @@ class Item(_message.Message):
     REVIEW_QUESTIONS_URL_FIELD_NUMBER: _ClassVar[int]
     REVIEW_SUMMARY_URL_FIELD_NUMBER: _ClassVar[int]
     CONTENT_RATING_FIELD_NUMBER: _ClassVar[int]
+    FAMILY_BADGE_FIELD_NUMBER: _ClassVar[int]
+    FAMILY_LIBRARY_FIELD_NUMBER: _ClassVar[int]
     id: str
     sub_id: str
     type: int
@@ -2177,7 +2269,9 @@ class Item(_message.Message):
     review_questions_url: str
     review_summary_url: str
     content_rating: ContentRating
-    def __init__(self, id: _Optional[str] = ..., sub_id: _Optional[str] = ..., type: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., creator: _Optional[str] = ..., description_html: _Optional[str] = ..., offer: _Optional[_Iterable[_Union[Offer, _Mapping]]] = ..., availability: _Optional[_Union[Availability, _Mapping]] = ..., image: _Optional[_Iterable[_Union[Image, _Mapping]]] = ..., sub_item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., container_metadata: _Optional[_Union[ContainerMetadata, _Mapping]] = ..., details: _Optional[_Union[DocumentDetails, _Mapping]] = ..., aggregate_rating: _Optional[_Union[AggregateRating, _Mapping]] = ..., annotations: _Optional[_Union[Annotations, _Mapping]] = ..., details_url: _Optional[str] = ..., share_url: _Optional[str] = ..., reviews_url: _Optional[str] = ..., backend_url: _Optional[str] = ..., purchase_details_url: _Optional[str] = ..., details_reusable: _Optional[bool] = ..., subtitle: _Optional[str] = ..., translated_description_html: _Optional[str] = ..., server_logs_cookie: _Optional[bytes] = ..., app_info: _Optional[_Union[AppInfo, _Mapping]] = ..., mature: _Optional[bool] = ..., promotional_description: _Optional[str] = ..., available_for_preregistration: _Optional[bool] = ..., tip: _Optional[_Iterable[_Union[ReviewTip, _Mapping]]] = ..., review_snippets_url: _Optional[str] = ..., force_shareability: _Optional[bool] = ..., use_wishlist_as_primary_action: _Optional[bool] = ..., review_questions_url: _Optional[str] = ..., review_summary_url: _Optional[str] = ..., content_rating: _Optional[_Union[ContentRating, _Mapping]] = ...) -> None: ...
+    family_badge: FamilyBadge
+    family_library: FamilyLibrary
+    def __init__(self, id: _Optional[str] = ..., sub_id: _Optional[str] = ..., type: _Optional[int] = ..., category_id: _Optional[int] = ..., title: _Optional[str] = ..., creator: _Optional[str] = ..., description_html: _Optional[str] = ..., offer: _Optional[_Iterable[_Union[Offer, _Mapping]]] = ..., availability: _Optional[_Union[Availability, _Mapping]] = ..., image: _Optional[_Iterable[_Union[Image, _Mapping]]] = ..., sub_item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., container_metadata: _Optional[_Union[ContainerMetadata, _Mapping]] = ..., details: _Optional[_Union[DocumentDetails, _Mapping]] = ..., aggregate_rating: _Optional[_Union[AggregateRating, _Mapping]] = ..., annotations: _Optional[_Union[Annotations, _Mapping]] = ..., details_url: _Optional[str] = ..., share_url: _Optional[str] = ..., reviews_url: _Optional[str] = ..., backend_url: _Optional[str] = ..., purchase_details_url: _Optional[str] = ..., details_reusable: _Optional[bool] = ..., subtitle: _Optional[str] = ..., translated_description_html: _Optional[str] = ..., server_logs_cookie: _Optional[bytes] = ..., app_info: _Optional[_Union[AppInfo, _Mapping]] = ..., mature: _Optional[bool] = ..., promotional_description: _Optional[str] = ..., available_for_preregistration: _Optional[bool] = ..., tip: _Optional[_Iterable[_Union[ReviewTip, _Mapping]]] = ..., review_snippets_url: _Optional[str] = ..., force_shareability: _Optional[bool] = ..., use_wishlist_as_primary_action: _Optional[bool] = ..., review_questions_url: _Optional[str] = ..., review_summary_url: _Optional[str] = ..., content_rating: _Optional[_Union[ContentRating, _Mapping]] = ..., family_badge: _Optional[_Union[FamilyBadge, _Mapping]] = ..., family_library: _Optional[_Union[FamilyLibrary, _Mapping]] = ...) -> None: ...
 
 class ContentRating(_message.Message):
     __slots__ = ("title", "recommendation_and_description_html", "content_rating_image", "recommendation", "description")
@@ -3971,3 +4065,273 @@ class ServerResponse(_message.Message):
     ERROR_FIELD_NUMBER: _ClassVar[int]
     error: ServerResponse.Error
     def __init__(self, error: _Optional[_Union[ServerResponse.Error, _Mapping]] = ...) -> None: ...
+
+class CompressedAppChunk(_message.Message):
+    __slots__ = ("download_url", "field2", "size")
+    DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    FIELD2_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    download_url: str
+    field2: str
+    size: int
+    def __init__(self, download_url: _Optional[str] = ..., field2: _Optional[str] = ..., size: _Optional[int] = ...) -> None: ...
+
+class MerkleTreeData(_message.Message):
+    __slots__ = ("download_url", "size", "sha256")
+    DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
+    download_url: str
+    size: int
+    sha256: str
+    def __init__(self, download_url: _Optional[str] = ..., size: _Optional[int] = ..., sha256: _Optional[str] = ...) -> None: ...
+
+class IncrementalSignatureData(_message.Message):
+    __slots__ = ("merkle_tree", "v4_signature")
+    MERKLE_TREE_FIELD_NUMBER: _ClassVar[int]
+    V4_SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    merkle_tree: MerkleTreeData
+    v4_signature: bytes
+    def __init__(self, merkle_tree: _Optional[_Union[MerkleTreeData, _Mapping]] = ..., v4_signature: _Optional[bytes] = ...) -> None: ...
+
+class NuggetFileData(_message.Message):
+    __slots__ = ("download_url", "size", "sha256", "compressed_app_data")
+    DOWNLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
+    COMPRESSED_APP_DATA_FIELD_NUMBER: _ClassVar[int]
+    download_url: str
+    size: int
+    sha256: str
+    compressed_app_data: CompressedAppData
+    def __init__(self, download_url: _Optional[str] = ..., size: _Optional[int] = ..., sha256: _Optional[str] = ..., compressed_app_data: _Optional[_Union[CompressedAppData, _Mapping]] = ...) -> None: ...
+
+class NuggetData(_message.Message):
+    __slots__ = ("idle_nugget_file_sha256", "idle_nugget", "rest_nugget")
+    IDLE_NUGGET_FILE_SHA256_FIELD_NUMBER: _ClassVar[int]
+    IDLE_NUGGET_FIELD_NUMBER: _ClassVar[int]
+    REST_NUGGET_FIELD_NUMBER: _ClassVar[int]
+    idle_nugget_file_sha256: _containers.RepeatedScalarFieldContainer[str]
+    idle_nugget: NuggetFileData
+    rest_nugget: NuggetFileData
+    def __init__(self, idle_nugget_file_sha256: _Optional[_Iterable[str]] = ..., idle_nugget: _Optional[_Union[NuggetFileData, _Mapping]] = ..., rest_nugget: _Optional[_Union[NuggetFileData, _Mapping]] = ...) -> None: ...
+
+class ReadLogConfig(_message.Message):
+    __slots__ = ("field1", "digest_behavior", "sample_rate", "marked_for_removal")
+    FIELD1_FIELD_NUMBER: _ClassVar[int]
+    DIGEST_BEHAVIOR_FIELD_NUMBER: _ClassVar[int]
+    SAMPLE_RATE_FIELD_NUMBER: _ClassVar[int]
+    MARKED_FOR_REMOVAL_FIELD_NUMBER: _ClassVar[int]
+    field1: int
+    digest_behavior: int
+    sample_rate: float
+    marked_for_removal: bool
+    def __init__(self, field1: _Optional[int] = ..., digest_behavior: _Optional[int] = ..., sample_rate: _Optional[float] = ..., marked_for_removal: _Optional[bool] = ...) -> None: ...
+
+class FamilyBadge(_message.Message):
+    __slots__ = ("age_label", "age_label_long", "description", "image", "state", "links")
+    class BadgeImage(_message.Message):
+        __slots__ = ("type", "image", "image_alt")
+        class Url(_message.Message):
+            __slots__ = ("url",)
+            URL_FIELD_NUMBER: _ClassVar[int]
+            url: str
+            def __init__(self, url: _Optional[str] = ...) -> None: ...
+        TYPE_FIELD_NUMBER: _ClassVar[int]
+        IMAGE_FIELD_NUMBER: _ClassVar[int]
+        IMAGE_ALT_FIELD_NUMBER: _ClassVar[int]
+        type: int
+        image: FamilyBadge.BadgeImage.Url
+        image_alt: FamilyBadge.BadgeImage.Url
+        def __init__(self, type: _Optional[int] = ..., image: _Optional[_Union[FamilyBadge.BadgeImage.Url, _Mapping]] = ..., image_alt: _Optional[_Union[FamilyBadge.BadgeImage.Url, _Mapping]] = ...) -> None: ...
+    class Link(_message.Message):
+        __slots__ = ("age_bucket", "target")
+        class Target(_message.Message):
+            __slots__ = ("destination",)
+            class Destination(_message.Message):
+                __slots__ = ("url",)
+                URL_FIELD_NUMBER: _ClassVar[int]
+                url: str
+                def __init__(self, url: _Optional[str] = ...) -> None: ...
+            DESTINATION_FIELD_NUMBER: _ClassVar[int]
+            destination: FamilyBadge.Link.Target.Destination
+            def __init__(self, destination: _Optional[_Union[FamilyBadge.Link.Target.Destination, _Mapping]] = ...) -> None: ...
+        AGE_BUCKET_FIELD_NUMBER: _ClassVar[int]
+        TARGET_FIELD_NUMBER: _ClassVar[int]
+        age_bucket: int
+        target: FamilyBadge.Link.Target
+        def __init__(self, age_bucket: _Optional[int] = ..., target: _Optional[_Union[FamilyBadge.Link.Target, _Mapping]] = ...) -> None: ...
+    AGE_LABEL_FIELD_NUMBER: _ClassVar[int]
+    AGE_LABEL_LONG_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_FIELD_NUMBER: _ClassVar[int]
+    STATE_FIELD_NUMBER: _ClassVar[int]
+    LINKS_FIELD_NUMBER: _ClassVar[int]
+    age_label: str
+    age_label_long: str
+    description: str
+    image: FamilyBadge.BadgeImage
+    state: int
+    links: _containers.RepeatedCompositeFieldContainer[FamilyBadge.Link]
+    def __init__(self, age_label: _Optional[str] = ..., age_label_long: _Optional[str] = ..., description: _Optional[str] = ..., image: _Optional[_Union[FamilyBadge.BadgeImage, _Mapping]] = ..., state: _Optional[int] = ..., links: _Optional[_Iterable[_Union[FamilyBadge.Link, _Mapping]]] = ...) -> None: ...
+
+class TeacherApprovalInfo(_message.Message):
+    __slots__ = ("group1", "group2", "group3", "group4", "group5", "group6", "title", "subtitle", "artwork", "notes")
+    class Group(_message.Message):
+        __slots__ = ("title", "values")
+        TITLE_FIELD_NUMBER: _ClassVar[int]
+        VALUES_FIELD_NUMBER: _ClassVar[int]
+        title: str
+        values: _containers.RepeatedScalarFieldContainer[str]
+        def __init__(self, title: _Optional[str] = ..., values: _Optional[_Iterable[str]] = ...) -> None: ...
+    class ArtworkUrl(_message.Message):
+        __slots__ = ("url",)
+        URL_FIELD_NUMBER: _ClassVar[int]
+        url: str
+        def __init__(self, url: _Optional[str] = ...) -> None: ...
+    class ApprovalArtwork(_message.Message):
+        __slots__ = ("image",)
+        IMAGE_FIELD_NUMBER: _ClassVar[int]
+        image: TeacherApprovalInfo.ArtworkUrl
+        def __init__(self, image: _Optional[_Union[TeacherApprovalInfo.ArtworkUrl, _Mapping]] = ...) -> None: ...
+    class Note(_message.Message):
+        __slots__ = ("heading", "body")
+        HEADING_FIELD_NUMBER: _ClassVar[int]
+        BODY_FIELD_NUMBER: _ClassVar[int]
+        heading: str
+        body: str
+        def __init__(self, heading: _Optional[str] = ..., body: _Optional[str] = ...) -> None: ...
+    class Notes(_message.Message):
+        __slots__ = ("title", "notes")
+        TITLE_FIELD_NUMBER: _ClassVar[int]
+        NOTES_FIELD_NUMBER: _ClassVar[int]
+        title: str
+        notes: _containers.RepeatedCompositeFieldContainer[TeacherApprovalInfo.Note]
+        def __init__(self, title: _Optional[str] = ..., notes: _Optional[_Iterable[_Union[TeacherApprovalInfo.Note, _Mapping]]] = ...) -> None: ...
+    GROUP1_FIELD_NUMBER: _ClassVar[int]
+    GROUP2_FIELD_NUMBER: _ClassVar[int]
+    GROUP3_FIELD_NUMBER: _ClassVar[int]
+    GROUP4_FIELD_NUMBER: _ClassVar[int]
+    GROUP5_FIELD_NUMBER: _ClassVar[int]
+    GROUP6_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    SUBTITLE_FIELD_NUMBER: _ClassVar[int]
+    ARTWORK_FIELD_NUMBER: _ClassVar[int]
+    NOTES_FIELD_NUMBER: _ClassVar[int]
+    group1: TeacherApprovalInfo.Group
+    group2: TeacherApprovalInfo.Group
+    group3: TeacherApprovalInfo.Group
+    group4: TeacherApprovalInfo.Group
+    group5: TeacherApprovalInfo.Group
+    group6: TeacherApprovalInfo.Group
+    title: str
+    subtitle: str
+    artwork: TeacherApprovalInfo.ApprovalArtwork
+    notes: TeacherApprovalInfo.Notes
+    def __init__(self, group1: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., group2: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., group3: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., group4: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., group5: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., group6: _Optional[_Union[TeacherApprovalInfo.Group, _Mapping]] = ..., title: _Optional[str] = ..., subtitle: _Optional[str] = ..., artwork: _Optional[_Union[TeacherApprovalInfo.ApprovalArtwork, _Mapping]] = ..., notes: _Optional[_Union[TeacherApprovalInfo.Notes, _Mapping]] = ...) -> None: ...
+
+class FamilyLibrary(_message.Message):
+    __slots__ = ("html",)
+    HTML_FIELD_NUMBER: _ClassVar[int]
+    html: str
+    def __init__(self, html: _Optional[str] = ...) -> None: ...
+
+class ModuleInstall(_message.Message):
+    __slots__ = ("should_stage", "enable_rollback", "is_apex")
+    SHOULD_STAGE_FIELD_NUMBER: _ClassVar[int]
+    ENABLE_ROLLBACK_FIELD_NUMBER: _ClassVar[int]
+    IS_APEX_FIELD_NUMBER: _ClassVar[int]
+    should_stage: bool
+    enable_rollback: bool
+    is_apex: bool
+    def __init__(self, should_stage: _Optional[bool] = ..., enable_rollback: _Optional[bool] = ..., is_apex: _Optional[bool] = ...) -> None: ...
+
+class Unconfirmed16(_message.Message):
+    __slots__ = ("flag1", "flag2", "value5", "value6")
+    FLAG1_FIELD_NUMBER: _ClassVar[int]
+    FLAG2_FIELD_NUMBER: _ClassVar[int]
+    VALUE5_FIELD_NUMBER: _ClassVar[int]
+    VALUE6_FIELD_NUMBER: _ClassVar[int]
+    flag1: bool
+    flag2: bool
+    value5: float
+    value6: int
+    def __init__(self, flag1: _Optional[bool] = ..., flag2: _Optional[bool] = ..., value5: _Optional[float] = ..., value6: _Optional[int] = ...) -> None: ...
+
+class DeliveryToken(_message.Message):
+    __slots__ = ("token",)
+    TOKEN_FIELD_NUMBER: _ClassVar[int]
+    token: str
+    def __init__(self, token: _Optional[str] = ...) -> None: ...
+
+class Archive(_message.Message):
+    __slots__ = ("derived_apk_id",)
+    DERIVED_APK_ID_FIELD_NUMBER: _ClassVar[int]
+    derived_apk_id: int
+    def __init__(self, derived_apk_id: _Optional[int] = ...) -> None: ...
+
+class AntiTamper(_message.Message):
+    __slots__ = ("transfer_key",)
+    TRANSFER_KEY_FIELD_NUMBER: _ClassVar[int]
+    transfer_key: bool
+    def __init__(self, transfer_key: _Optional[bool] = ...) -> None: ...
+
+class DependencyModule(_message.Message):
+    __slots__ = ("name", "version_code", "type")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    VERSION_CODE_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    version_code: int
+    type: int
+    def __init__(self, name: _Optional[str] = ..., version_code: _Optional[int] = ..., type: _Optional[int] = ...) -> None: ...
+
+class DependencySplit(_message.Message):
+    __slots__ = ("name", "sdk_split_hotfix_version")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    SDK_SPLIT_HOTFIX_VERSION_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    sdk_split_hotfix_version: int
+    def __init__(self, name: _Optional[str] = ..., sdk_split_hotfix_version: _Optional[int] = ...) -> None: ...
+
+class Reinstall(_message.Message):
+    __slots__ = ("behavior", "unconfirmed2")
+    BEHAVIOR_FIELD_NUMBER: _ClassVar[int]
+    UNCONFIRMED2_FIELD_NUMBER: _ClassVar[int]
+    behavior: int
+    unconfirmed2: int
+    def __init__(self, behavior: _Optional[int] = ..., unconfirmed2: _Optional[int] = ...) -> None: ...
+
+class LibraryDetails(_message.Message):
+    __slots__ = ("sdk",)
+    SDK_FIELD_NUMBER: _ClassVar[int]
+    sdk: SdkLibrary
+    def __init__(self, sdk: _Optional[_Union[SdkLibrary, _Mapping]] = ...) -> None: ...
+
+class SdkLibrary(_message.Message):
+    __slots__ = ("size", "version_major", "unconfirmed3")
+    SIZE_FIELD_NUMBER: _ClassVar[int]
+    VERSION_MAJOR_FIELD_NUMBER: _ClassVar[int]
+    UNCONFIRMED3_FIELD_NUMBER: _ClassVar[int]
+    size: int
+    version_major: int
+    unconfirmed3: int
+    def __init__(self, size: _Optional[int] = ..., version_major: _Optional[int] = ..., unconfirmed3: _Optional[int] = ...) -> None: ...
+
+class AssetModuleVersion(_message.Message):
+    __slots__ = ("version",)
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    version: int
+    def __init__(self, version: _Optional[int] = ...) -> None: ...
+
+class SplitHotfix(_message.Message):
+    __slots__ = ("sdk_split_hotfix_version",)
+    SDK_SPLIT_HOTFIX_VERSION_FIELD_NUMBER: _ClassVar[int]
+    sdk_split_hotfix_version: int
+    def __init__(self, sdk_split_hotfix_version: _Optional[int] = ...) -> None: ...
+
+class BadgeLogs(_message.Message):
+    __slots__ = ("server_logs_cookie",)
+    SERVER_LOGS_COOKIE_FIELD_NUMBER: _ClassVar[int]
+    server_logs_cookie: bytes
+    def __init__(self, server_logs_cookie: _Optional[bytes] = ...) -> None: ...

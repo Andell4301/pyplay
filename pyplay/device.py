@@ -63,6 +63,11 @@ class Device:
         return self.properties.get("SimOperator", "")
 
     @property
+    def user_languages(self) -> str:
+        # DFE's locale list omits scripts, unlike the Accept-Language header.
+        return "_".join(part for part in (self.locale.language, self.locale.territory) if part)
+
+    @property
     def auth_user_agent_string(self) -> str:
         device = self.properties.get("Build.DEVICE", "")
         build_id = self.properties.get("Build.ID", "")

@@ -27,6 +27,10 @@ async def main():
         await api.download_app("package_name", output_dir=Path("."))
 ```
 
+For streams that return items and a node tree, use `await api.get_stream_tree_response("getHomeStream?c=3")`. The returned `StreamResponse` has `item` and `tree` fields. The same method accepts child URLs and page URLs with a `ptkn` cursor.
+
+Delivery methods accept `installed_derived_apk_id`, `installed_frosting_id`, and `patch_formats` alongside a positive `installed_version_code`. The single `patch_format` argument is also supported. Downloading or applying a binary patch is the caller's responsibility.
+
 ## Logging
 
 Pyplay uses Python's standard `logging` module and leaves handlers and log levels to the calling application. To send its debug logs to stderr:

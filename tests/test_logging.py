@@ -201,7 +201,7 @@ class HTTPLoggingTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("GET", str(raised.exception))
         self.assertIn("/fdfe/details", str(raised.exception))
 
-    async def test_auth_credentials_are_sent_in_form_bodies_instead_of_urls(self) -> None:
+    async def test_auth_credentials_use_query_parameters_against_an_empty_body(self) -> None:
         requests: list[httpx.Request] = []
 
         def respond(request: httpx.Request) -> httpx.Response:
@@ -220,11 +220,10 @@ class HTTPLoggingTests(unittest.IsolatedAsyncioTestCase):
         for request, expected_token in zip(requests, ("private-oauth-token", "private-aas-token"), strict=True):
             with self.subTest(token=expected_token):
                 self.assertEqual(request.method, "POST")
-                self.assertEqual(request.url.query, b"")
-                self.assertNotIn(expected_token, str(request.url))
-                form = parse_qs(request.content.decode())
-                self.assertEqual(form["Token"], [expected_token])
-                self.assertEqual(form["Email"], [self.api.auth_data.email])
+                self.assertEqual(request.content, b"")
+                query = parse_qs(request.url.query.decode())
+                self.assertEqual(query["Token"], [expected_token])
+                self.assertEqual(query["Email"], [self.api.auth_data.email])
 
     async def test_aas_token_failures_do_not_dump_auth_response(self) -> None:
         self.api.auth_data.email = "test@example.invalid"
