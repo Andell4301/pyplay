@@ -1,5 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from google.protobuf.message import DecodeError
+
+
+class ProtobufResponseError(DecodeError):
+    def __init__(self, method: str, route: str) -> None:
+        self.method = method
+        self.route = route
+        super().__init__(f"{method} {route} returned invalid protobuf")
+
 
 class DeviceNotFoundError(Exception):
     def __init__(

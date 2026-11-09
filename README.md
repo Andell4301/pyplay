@@ -26,3 +26,35 @@ async def main():
         await api.setup()
         await api.download_app("package_name", output_dir=Path("."))
 ```
+
+## Logging
+
+Pyplay uses Python's standard `logging` module and leaves handlers and log levels to the calling application. To send its debug logs to stderr:
+
+```py
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.WARNING,
+    stream=sys.stderr,
+    format="%(levelname)s %(name)s: %(message)s",
+)
+logging.getLogger("pyplay").setLevel(logging.DEBUG)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+```
+
+Set the `pyplay` logger to `logging.INFO` for authentication and download progress, or `logging.ERROR` to suppress informational and warning messages. Request logs include method and route context; structured log records also provide request IDs, timing, status, and response sizes for custom handlers. Download completion records include byte and file counts.
+
+Pyplay's own logs and request error messages omit URL query strings and complete credential values. `repr(AuthData(...))` hides emails, IDs, and cookies. Token fields show only a three-character prefix and suffix when the value contains at least twelve printable ASCII characters without whitespace; shorter or non-printable tokens remain redacted. `repr(PlayFile(...))` hides its download URL.
+
+These safeguards apply to Pyplay's own representations, logs, and error messages. HTTPX and other dependencies have their own logging behavior. Keep their log levels at `WARNING` or higher as shown above: HTTPX request logs can include signed download URLs and other sensitive query parameters. Accessing credential fields directly, logging raw request headers, or printing the OAuth helper's output still exposes complete credentials.
+
+## Tests
+
+With the project dependencies installed, run the regression tests without making network requests:
+
+```sh
+python -m unittest discover -s tests -v
+```

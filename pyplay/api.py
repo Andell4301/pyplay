@@ -8,14 +8,17 @@ import base64
 import json
 import logging
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from io import BytesIO
+from itertools import count
+from time import perf_counter
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
 from zipfile import ZipFile
 
 import httpx
 from babel import Locale, default_locale
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import DecodeError, Message
 
 from pyplay.constants import (
     DEFAULT_ANDROID_VENDING_APP,
@@ -58,7 +61,7 @@ from pyplay.constants import (
     TokenService,
 )
 from pyplay.device import Device
-from pyplay.exceptions import AuthExceptionError, PurchaseError
+from pyplay.exceptions import AuthExceptionError, ProtobufResponseError, PurchaseError
 from pyplay.playprotos.acquire_app import AcquireRequest, AcquireResponseWrapper
 from pyplay.playprotos.google_play import (
     AndroidCheckinResponse,
@@ -70,7 +73,7 @@ from pyplay.playprotos.google_play import (
     UploadDeviceConfigRequest,
 )
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Message)
 
 
 if TYPE_CHECKING:
@@ -97,9 +100,45 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+_REQUEST_IDS = count(1)
+_TOKEN_PREVIEW_MIN_CHARS = 12
+_TOKEN_PREVIEW_EDGE_CHARS = 3
 
 
-@dataclass
+def _token_preview(value: str) -> str:
+    if len(value) < _TOKEN_PREVIEW_MIN_CHARS or not all("!" <= char <= "~" for char in value):
+        return "<redacted>"
+    return f"{value[:_TOKEN_PREVIEW_EDGE_CHARS]}…{value[-_TOKEN_PREVIEW_EDGE_CHARS:]}"
+
+
+def _safe_route(url: str) -> str:
+    try:
+        route = httpx.URL(url).path
+    except (httpx.InvalidURL, ValueError):
+        return "<invalid>"
+    return route.encode("unicode_escape").decode("ascii") or "/"
+
+
+def _elapsed_ms(started: float) -> int:
+    return int((perf_counter() - started) * 1000)
+
+
+def _raise_for_status(response: httpx.Response, method: str, route: str) -> None:
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        msg = f"{method} {route} returned HTTP {response.status_code}"
+        raise httpx.HTTPStatusError(msg, request=response.request, response=response) from None
+
+
+def _decode_response(message_type: type[T], response: httpx.Response, method: str, route: str) -> T:
+    try:
+        return message_type.FromString(response.content)
+    except DecodeError:
+        raise ProtobufResponseError(method, route) from None
+
+
+@dataclass(repr=False)
 class AuthData:
     email: str = ""
     aas_token: str = ""
@@ -114,13 +153,25 @@ class AuthData:
     gcm_token: str = ""
     dfe_cookie: str = ""
 
+    def __repr__(self) -> str:
+        hidden_fields = {"email", "gsf_id", "dfe_cookie"}
+        values = []
+        for field in fields(self):
+            value = getattr(self, field.name)
+            preview = "<redacted>" if field.name in hidden_fields else _token_preview(value)
+            values.append(f"{field.name}={preview!r}")
+        return f"AuthData({', '.join(values)})"
 
-@dataclass
+
+@dataclass(repr=False)
 class PlayFile:
     name: str
     url: str
     size: int
     type: PlayFileType
+
+    def __repr__(self) -> str:
+        return f"PlayFile(name={self.name!r}, url='<redacted>', size={self.size!r}, type={self.type!r})"
 
 
 class GooglePlayAPI:
@@ -243,21 +294,53 @@ class GooglePlayAPI:
         return params
 
     async def _request(
-        self, method: str, url: str, *, raise_for_status: bool = True, **request_kwargs: Any
+        self, method: str, url: str, *, raise_for_status: bool = True, _artifact: bool = False, **request_kwargs: Any
     ) -> httpx.Response:
-        resp = await self.client.request(method, url, **request_kwargs)
-        logger.debug("Request to %s %s returned %s", method, url, resp.status_code)
+        route = "artifact" if _artifact else _safe_route(url)
+        request_id = next(_REQUEST_IDS)
+        started = perf_counter()
+        context = {"http_method": method, "http_route": route, "request_id": request_id}
+        logger.debug("%s %s request", method, route, extra=context)
+        try:
+            resp = await self.client.request(method, url, **request_kwargs)
+        except httpx.RequestError as error:
+            error_type = type(error).__name__
+            logger.debug(
+                "%s %s failed (%s)",
+                method,
+                route,
+                error_type,
+                extra={**context, "elapsed_ms": _elapsed_ms(started)},
+            )
+            msg = f"{method} {route} failed: {error_type}"
+            raise type(error)(msg, request=error.request) from None
+        except httpx.InvalidURL:
+            msg = f"{method} {route} failed: invalid URL"
+            raise httpx.InvalidURL(msg) from None
+        logger.debug(
+            "%s %s returned %s",
+            method,
+            route,
+            resp.status_code,
+            extra={
+                **context,
+                "http_status": resp.status_code,
+                "elapsed_ms": _elapsed_ms(started),
+                "response_bytes": len(resp.content),
+            },
+        )
         if raise_for_status:
-            resp.raise_for_status()
+            _raise_for_status(resp, method, route)
         return resp
 
     async def _play_request(self, method: str, url: str, **request_kwargs: Any) -> ResponseWrapper:
         resp = await self._request(method, url, raise_for_status=True, **request_kwargs)
-        return ResponseWrapper.FromString(resp.content)
+        return _decode_response(ResponseWrapper, resp, method, _safe_route(url))
 
     async def setup(self, force: bool = False) -> None:
-        logger.info("Setting up Google Play authentication...")
+        logger.info("auth setup started", extra={"force": force})
         if self.auth_data.gsf_id and self.auth_data.auth_token and not force:
+            logger.info("auth ready", extra={"reused": True})
             return  # Manual GSF ID and Auth Token can skip setup
 
         if self.auth_data.email and self.auth_data.oauth_login_token and not self.auth_data.aas_token:
@@ -280,7 +363,7 @@ class GooglePlayAPI:
         # toc_response = await self.toc()  # noqa: ERA001
         # self.auth_data.dfe_cookie = toc_response.cookie  # noqa: ERA001
 
-        logger.info("Authenticated!")
+        logger.info("auth ready", extra={"reused": False})
 
     async def generate_aas_token(self) -> str:
         logger.debug("Requesting AAS token from OAuth login token...")
@@ -300,12 +383,12 @@ class GooglePlayAPI:
         headers = self.get_auth_headers()
         headers["app"] = DEFAULT_ANDROID_VENDING_APP
 
-        resp = await self._request("POST", URL_AUTH, headers=headers, params=params, raise_for_status=True)
+        resp = await self._request("POST", URL_AUTH, headers=headers, data=params, raise_for_status=True)
         parsed = self.parse_form_response(resp.content)
         token = parsed.get("Token", "")
 
         if not token:
-            msg = f"Failed to obtain AAS token. Response: {parsed}"
+            msg = "Failed to obtain AAS token"
             raise ValueError(msg)
         return token
 
@@ -348,11 +431,11 @@ class GooglePlayAPI:
             case TokenService.ANDROID:
                 params["service"] = TokenService.ANDROID
 
-        resp = await self._request("POST", URL_AUTH, headers=headers, params=params, raise_for_status=True)
+        resp = await self._request("POST", URL_AUTH, headers=headers, data=params, raise_for_status=True)
         parsed = self.parse_form_response(resp.content)
         auth = parsed.get("Auth", "")
         if not auth:
-            msg = f"Failed to obtain {service.value} token. Response: {parsed}"
+            msg = f"Failed to obtain {service.value} token"
             raise AuthExceptionError(msg)
         return auth
 
@@ -362,7 +445,7 @@ class GooglePlayAPI:
         headers["Content-Type"] = "application/x-protobuf"
         headers["Host"] = "android.clients.google.com"
         resp = await self._request("POST", URL_CHECK_IN, headers=headers, content=request)
-        return AndroidCheckinResponse.FromString(resp.content)
+        return _decode_response(AndroidCheckinResponse, resp, "POST", _safe_route(URL_CHECK_IN))
 
     async def upload_device_config(self) -> UploadDeviceConfigResponse:
         logger.debug("Uploading device configuration...")
@@ -391,9 +474,11 @@ class GooglePlayAPI:
     async def get_user_profile(self) -> UserProfile | None:
         headers = self.get_default_headers()
         resp = await self._request("GET", URL_USER_PROFILE, headers=headers, raise_for_status=False)
-        if resp.is_success:
-            return ResponseWrapperApi.FromString(resp.content).payload.user_profile_response.user_profile
-        return None
+        if resp.status_code == httpx.codes.NOT_FOUND:
+            return None
+        route = _safe_route(URL_USER_PROFILE)
+        _raise_for_status(resp, "GET", route)
+        return _decode_response(ResponseWrapperApi, resp, "GET", route).payload.user_profile_response.user_profile
 
     async def get_app_details_by_package_name(self, package_name: str) -> DetailsResponse:
         headers = self.get_default_headers()
@@ -625,7 +710,7 @@ class GooglePlayAPI:
         body = acquire_request.SerializeToString()
         headers = self.get_default_headers()
         resp = await self._request("POST", URL_ACQUIRE, headers=headers, content=body)
-        return AcquireResponseWrapper.FromString(resp.content)
+        return _decode_response(AcquireResponseWrapper, resp, "POST", _safe_route(URL_ACQUIRE))
 
     async def purchase(
         self,
@@ -641,9 +726,11 @@ class GooglePlayAPI:
         # It doesn't matter if this fails
         try:
             await self.acquire(package_name, version_code, offer_type)
-        except Exception as e:
-            logger.warning(
-                "Acquire failed for %s:%s with offer type %s. Error: %s", package_name, version_code, offer_type, e
+        except Exception as error:
+            logger.debug(
+                "acquire failed; continuing for %r",
+                package_name,
+                extra={"version_code": version_code, "offer_type": offer_type, "error_type": type(error).__name__},
             )
 
         delivery_token = await self.get_delivery_token(package_name, version_code, offer_type, certificate_hash)
@@ -659,6 +746,11 @@ class GooglePlayAPI:
         )
 
         if delivery_response.status == DeliveryResponseStatus.SUCCESS:
+            logger.debug(
+                "purchase complete for %r",
+                package_name,
+                extra={"version_code": version_code, "offer_type": offer_type, "status": delivery_response.status},
+            )
             return delivery_response
         if delivery_response.status in [
             DeliveryResponseStatus.NOT_SUPPORTED_FOR_PURCHASE,
@@ -689,6 +781,8 @@ class GooglePlayAPI:
         custom_apk_name: str | None = None,
         include_dex: bool = False,
     ) -> None:
+        started = perf_counter()
+        logger.info("download started for %r", package_name)
         if output_dir.is_file():
             msg = f"Output directory {output_dir} is a file. Please provide a valid directory path."
             raise ValueError(msg)
@@ -709,19 +803,19 @@ class GooglePlayAPI:
         )
 
         files = self.parse_delivery_response(package_name, delivery_response)
+        downloaded_bytes = 0
+        file_count = 0
         if len(files) == 1:
-            data = await self.client.get(files[0].url)
-            data.raise_for_status()
             output_path = output_dir / (custom_apk_name or files[0].name)
-            output_path.write_bytes(data.content)
+            downloaded_bytes += await self._save_play_file(files[0], output_path)
+            file_count += 1
         else:
             for file in files:
                 if file.type == PlayFileType.DEX and not include_dex:
                     continue
-                data = await self.client.get(file.url)
-                data.raise_for_status()
                 output_path = output_dir / file.name
-                output_path.write_bytes(data.content)
+                downloaded_bytes += await self._save_play_file(file, output_path)
+                file_count += 1
 
         if use_xapk and len(files) > 1:
             self.make_xapk(
@@ -732,6 +826,33 @@ class GooglePlayAPI:
                 custom_apk_name,
                 include_dex,
             )
+        logger.info(
+            "download complete for %r",
+            package_name,
+            extra={
+                "version_code": vc,
+                "offer_type": ot,
+                "file_count": file_count,
+                "downloaded_bytes": downloaded_bytes,
+                "elapsed_ms": _elapsed_ms(started),
+            },
+        )
+
+    async def _save_play_file(self, file: PlayFile, output_path: Path) -> int:
+        response = await self._request("GET", file.url, _artifact=True)
+        actual_size = len(response.content)
+        if file.size < 0:
+            msg = f"Invalid download size: {file.size}"
+            raise ValueError(msg)
+        if actual_size != file.size:
+            msg = f"Download size mismatch: expected {file.size} bytes, got {actual_size}"
+            raise ValueError(msg)
+        output_path.write_bytes(response.content)
+        logger.debug(
+            "file download complete",
+            extra={"file_type": file.type.value, "byte_count": actual_size, "expected_bytes": file.size},
+        )
+        return actual_size
 
     def make_xapk(
         self,
@@ -756,9 +877,16 @@ class GooglePlayAPI:
             if icon_data := self.extract_icon_from_apk((output_dir / "base.apk").read_bytes()):
                 zipf.writestr("icon.png", icon_data)
 
-        for file in files:
-            (output_dir / file.name).unlink(missing_ok=True)
-        manifest_path.unlink(missing_ok=True)
+        cleanup_failures = 0
+        cleanup_paths = [output_dir / file.name for file in files if include_dex or file.type != PlayFileType.DEX]
+        for path in [*cleanup_paths, manifest_path]:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                cleanup_failures += 1
+        if cleanup_failures:
+            logger.warning("xapk cleanup incomplete", extra={"cleanup_failures": cleanup_failures})
+        logger.debug("xapk created", extra={"input_file_count": len(cleanup_paths)})
 
     @staticmethod
     def extract_icon_from_apk(apk_data: bytes) -> bytes | None:
@@ -818,7 +946,7 @@ class GooglePlayAPI:
             # I don't think XAPK manifest has a standard way to include DEX files?
             # https://openxapkfile.net/manifest.html
             elif file.type == PlayFileType.DEX and include_dex:
-                logger.warning("Cannot include dex files in XAPK")
+                logger.warning("dex file omitted from xapk manifest")
         return manifest
 
     def parse_delivery_response(self, package_name: str, response: DeliveryResponse) -> list[PlayFile]:
